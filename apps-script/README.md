@@ -16,6 +16,11 @@ Le script `Code.gs` relie le Banc de câblage à un Google Sheet : connexion des
 
 5. Copier l'**URL de l'application Web** de chacun (elle se termine par `/exec`) et les mettre dans l'app (`var CPT = {loginUrl: A, apiUrl: B}` dans `index.html`).
 
+## Installation actuelle
+
+- Google Sheet « Banc de câblage – données » et projet Apps Script « Banc de câblage – comptes » (compte olivier.lesenfants@elmarche.be).
+- Les deux adresses sont déjà dans `index.html`.
+
 ## Onglets
 
 - **Profs** : adresses des professeurs (accès complet et page « Mes élèves »).

@@ -5141,7 +5141,7 @@ $('#btnLic').onclick = openLic;
 
 /* ---------- compte : connexion (compte de l'école ou code par e-mail), accès autorisé par le prof, suivi des exercices ---------- */
 // adresses des deux déploiements du script du Google Sheet « Banc de câblage – données » (voir apps-script/Code.gs) ; vides = fonction absente
-var CPT = {loginUrl: '', apiUrl: ''};
+var CPT = {loginUrl: 'https://script.google.com/a/macros/elmarche.be/s/AKfycbxK5qN4JOH_X4IIZyG9vIkv5V6oZrVRsUeSCm9PilQae4WkL6TXsoqkEzsaALe8rTFJiQ/exec', apiUrl: 'https://script.google.com/macros/s/AKfycbwcEiD-t69me_16NUq0a87jlMjNtlnpxxckAeyh6jvi5AYcXMThXoLF2vWC90Vz2lMEaw/exec'};
 var CPTKEY = 'banc-cablage-compte', OUTKEY = 'banc-cablage-envois:', SEENKEY = 'banc-cablage-vus';
 var ACC = null, ACCPROF = false, accT = null, accBusy = false, cptStep = null;
 function cptOn(){ return !!(CPT && CPT.apiUrl && CPT.loginUrl); }
