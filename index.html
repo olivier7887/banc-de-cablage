@@ -439,6 +439,31 @@ button{cursor:pointer}
 .ex.lockd b::before{content:'🔒 ';font-size:15px}
 .licban{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid var(--accent);background:var(--accent-soft);color:var(--ink);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:14px}
 .licban span{flex:1;min-width:200px}
+#btnCompte.on{border-color:var(--accent);color:var(--accent)}
+.who input[readonly]{background:transparent;border-color:transparent;color:var(--ink);font-weight:600;padding-left:0}
+.cpt{display:grid;gap:12px}
+.cpt .box{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px;background:var(--paper)}
+.cpt .box h3{margin:0;font-size:15px}
+.cpt input,.cpt select,.el input,.el select{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 10px;font-size:15px;min-width:0}
+.cpt .row,.el .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.cpt .msg{font-size:13.5px;min-height:1em}.cpt .msg.ko,.el .ko{color:var(--danger)}
+.cpt .st{border-radius:8px;padding:8px 10px;font-size:14px;background:var(--accent-soft)}
+.cpt .st.ok{background:color-mix(in srgb,#2e8b57 16%,transparent)}
+.el{display:grid;gap:14px}
+.el h3{margin:0;font-size:16px}
+.el table{width:100%;border-collapse:collapse;font-size:14px}
+.el th,.el td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.el th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+.el tr.stu{cursor:pointer}.el tr.stu:hover{background:var(--accent-soft)}
+.el .tag{display:inline-block;font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:1px 7px;color:var(--muted);margin-left:4px}
+.el .det{background:var(--paper)}.el .det ul{margin:4px 0 8px;padding-left:18px}.el .det li{margin:2px 0}
+.el .ok{color:#2e8b57;font-weight:600}
+.el .scroll{overflow-x:auto}
+.el .mut{color:var(--muted);font-size:13px}
+@media (max-width:620px){.el .hide-s{display:none}
+  .el table,.el tbody,.el tr,.el td{display:block;width:auto}.el th{display:none}
+  .el tr{border-bottom:1px solid var(--line);padding:6px 0}.el td{border:0;padding:2px 0}
+  .el .row>input,.el .row>select,.el .row>label{flex:1 1 100%;min-width:0!important}}
 .catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:10px}
 .catc{display:grid;grid-template-columns:44px 1fr;gap:4px 10px;align-items:start;text-align:left;border:2px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--paper);color:var(--ink);cursor:pointer;font:inherit}
 .catc:hover,.catc:focus-visible{border-color:var(--accent)}
@@ -523,6 +548,7 @@ textarea#codeTxt{width:100%;box-sizing:border-box;min-height:180px;font-family:v
       <button class="btn icon" id="btnClear" title="Vider le schéma">✕<span class="lab">Vider</span></button>
       <button class="btn icon" id="btnShot" title="Capture du schéma (pour Classroom)">📷<span class="lab">Capture</span></button>
       <button class="btn" id="btnCode">Partager</button>
+      <button class="btn" id="btnCompte" hidden>Se connecter</button>
       <button class="btn" id="btnProf"></button>
       <button class="btn icon" id="btnHelp" title="Aide">?</button>
     </div>
@@ -628,6 +654,7 @@ textarea#codeTxt{width:100%;box-sizing:border-box;min-height:180px;font-family:v
     <li>3Q · câblage sur le modèle (bâtiment) : le panneau de la classe avec trois points lumineux en haut, une boîte de dérivation au centre et trois boîtiers en bas (simples ou doubles). Les appareils sont déjà placés : tire les conducteurs, ils passent tout seuls dans les tubes et la boîte de dérivation. Phase brune ou noire, neutre bleu, terre vert-jaune vers la barrette de terre du tableau. Deux lampes en série éclairent moins fort : chacune ne reçoit qu’une partie de la tension.</li>
     <li>Défis : choisis d’abord une catégorie (bâtiment : fiches, 3Q sur le modèle, simulateur du local ; électrotechnique : relais, moteurs, pneumatique, capteurs, LOGO!, recherche de pannes). La dernière catégorie ouverte est retenue ; « ← Catégories » revient au choix.</li>
     <li>Codes : une licence élève débloque tous les défis ; une licence prof ouvre l’application en mode prof à chaque démarrage sur cet appareil (« Verrouiller » repasse en mode élève jusqu’à la prochaine ouverture) ; un code mode prof rend les exemples et les solutions visibles sur l’appareil d’un élève jusqu’à « Verrouiller » ou la fermeture de l’application, sans toucher à sa licence. Ils s’entrent dans « 🔑 Licence » ou dans « Mode prof ».</li>
+    <li>Compte : « Se connecter » avec le compte de l’école ou avec un code reçu par e-mail. Quand le professeur a autorisé l’accès, tous les défis sont débloqués et chaque essai lui est envoyé. Sur un ordinateur partagé, déconnecte-toi à la fin (bouton à ton prénom).</li>
     <li>Licence : sans code, trois défis sont disponibles pour découvrir l’application (simple allumage, relais 1, simulateur libre), et le dessin libre est limité à 10 composants. Le code donné par le professeur (bouton « 🔑 Licence » en bas de cette aide, ou lien d’activation) débloque tous les défis pour l’année scolaire.</li>
     <li>Couleur des fils : brun L/L1, noir L2, gris L3, bleu N. Un court-circuit fait déclencher la protection la plus proche.</li>
   </ul>
@@ -685,6 +712,16 @@ textarea#codeTxt{width:100%;box-sizing:border-box;min-height:180px;font-family:v
   </form>
   <p class="shotnote">Le code de licence est donné par le professeur. Il est valable pour une année scolaire (du 1er août au 30 septembre suivant) et reste enregistré sur cet appareil. À l’activation, l’application vérifie la licence en ligne : seuls le code et un identifiant d’appareil anonyme sont transmis, aucun nom.</p>
   <p class="shotnote">© 2026 Olivier Lesenfants · Tous droits réservés. Logiciel propriétaire, non open source : toute falsification ou tout contournement de la licence est interdit et peut donner lieu à des poursuites.</p>
+</div></div>
+
+<div class="modal" id="mCpt" hidden><div class="sheet" role="dialog" aria-label="Mon compte" style="max-width:500px">
+  <div class="top"><h2 id="cptH">Se connecter</h2><button class="btn ghost" data-close>Fermer</button></div>
+  <div class="cpt" id="cptBody"></div>
+</div></div>
+
+<div class="modal" id="mEl" hidden><div class="sheet" role="dialog" aria-label="Mes élèves" style="max-width:900px">
+  <div class="top"><h2>Mes élèves</h2><div style="display:flex;gap:6px"><button class="btn" id="elRef">Actualiser</button><button class="btn ghost" data-close>Fermer</button></div></div>
+  <div class="el" id="elBody"><p class="mut">Chargement…</p></div>
 </div></div>
 
 <div class="modal" id="mPwd" hidden><div class="sheet" role="dialog" aria-label="Mode prof" style="max-width:420px">
@@ -2928,7 +2965,7 @@ function bindDep(c){
   const ok = $('#dOk'); if(ok) ok.onclick = () => {
     const sel2 = consEl.querySelector('input[name="dF"]:checked'); if(!sel2){ flash('Choisis le type de panne.'); return; }
     const f = depFault();
-    if(f && d.pick.k === f.k && d.pick.id === f.id && sel2.value === f.ft){ d.done = Date.now(); DEPT = {tool:null, a:null}; d.msg = ''; }
+    if(f && d.pick.k === f.k && d.pick.id === f.id && sel2.value === f.ft){ d.done = Date.now(); DEPT = {tool:null, a:null}; d.msg = ''; accDep(c, d, f); }
     else { d.wrong++; d.msg = d.pick.k === (f && f.k) && d.pick.id === (f && f.id) ? 'Bon élément, mais ce n’est pas ce type de panne.' : 'Ce n’est pas la panne. Continue à mesurer.'; }
     d.pick = null; save(); renderConsigne(); render();
   };
@@ -4069,7 +4106,7 @@ function renderConsigne0(){
     }
     if(EDITION === 'eleve' && !S.comps.length){
       consEl.hidden = false;
-      consEl.innerHTML = `<div class="k">Bienvenue</div><h4>Choisis un défi</h4><p>Ouvre « Défis » pour recevoir les composants d’un schéma à câbler. Indique ton nom en haut, câble, puis touche « Vérifier mon câblage ».</p><div class="row"><button class="btn primary" id="cOpen">Voir les défis</button></div>`;
+      consEl.innerHTML = `<div class="k">Bienvenue</div><h4>Choisis un défi</h4><p>Ouvre « Défis » pour recevoir les composants d’un schéma à câbler. ${ACC ? 'Câble' : 'Indique ton nom en haut, câble'}, puis touche « Vérifier mon câblage ».</p><div class="row"><button class="btn primary" id="cOpen">Voir les défis</button></div>`;
       $('#cOpen').onclick = () => { $('#mEx').hidden = false; };
       return;
     }
@@ -4418,16 +4455,16 @@ const wsGet = k => { try{ return WS ? WS.getItem(k) : null; }catch(e){ return nu
 try{ [TRIESKEY, NAMEKEY, 'banc-cablage-v1'].forEach(k => localStorage.removeItem(k)); }catch(e){}
 try{ TRIES = JSON.parse(wsGet(TRIESKEY) || '{}') || {}; }catch(e){ TRIES = {}; }
 function triesOf(k){ if(!TRIES[k]) TRIES[k] = {n:0, ok:null, last:''}; return TRIES[k]; }
-function saveTries(){ wsSet(TRIESKEY, JSON.stringify(TRIES)); }
+function saveTries(){ wsSet(TRIESKEY, JSON.stringify(TRIES)); accTrack(); }
 const nth = n => n === 1 ? '1er' : n + 'e';
 function triesText(k){
   const r = TRIES[k];
   if(!r || !r.n) return 'aucun essai pour l’instant';
   return r.ok != null ? `réussi au ${nth(r.ok)} essai` : `${r.n} essai${r.n > 1 ? 's' : ''}, pas encore réussi`;
 }
-function studentName(){ const i = $('#eleveNom'); return i ? i.value.trim() : ''; }
+function studentName(){ if(ACC && ACC.complet) return ACC.complet; const i = $('#eleveNom'); return i ? i.value.trim() : ''; }
 function needName(what){
-  if(EDITION !== 'eleve' || /\S\S+\s+\S\S+/.test(studentName())) return false;
+  if(EDITION !== 'eleve' || ACC || /\S\S+\s+\S\S+/.test(studentName())) return false;
   flash(`Indique d’abord ton nom et ton prénom en haut (ex. : Dupont Léa) pour ${what}.`);
   const i = $('#eleveNom'); if(i){ i.classList.add('need'); try{ i.focus(); }catch(e){} setTimeout(() => i.classList.remove('need'), 3000); }
   return true;
@@ -4448,7 +4485,7 @@ const EXCATS = [
   {id:'all', fil:'both', n:'Tout afficher', d:'Tous les exemples et défis de la filière, sur une seule liste.', grps:null, i:'<rect x="8" y="8" width="16" height="16" rx="3"/><rect x="32" y="8" width="16" height="16" rx="3"/><rect x="8" y="32" width="16" height="16" rx="3"/><rect x="32" y="32" width="16" height="16" rx="3"/>'}];
 const EXCATKEY = 'banc-cablage-excat';
 let EXCAT = null; try{ EXCAT = localStorage.getItem(EXCATKEY); }catch(e){}
-function licBan(){ return licOK() ? '' : `<div class="licban"><span>Version d’essai : 3 défis libres et 10 composants en dessin libre. Le code de licence du professeur débloque tout.</span><button class="btn primary" data-lic="1">Entrer un code</button></div>`; }
+function licBan(){ return licOK() ? '' : `<div class="licban"><span>${ACC && ACC.statut === 'attente' ? 'Ta demande d’accès attend l’accord de ton professeur. En attendant : 3 défis libres et 10 composants en dessin libre.' : 'Version d’essai : 3 défis libres et 10 composants en dessin libre. Connecte-toi ou entre le code de licence du professeur pour tout débloquer.'}</span>${cptOn() && !ACC ? '<button class="btn primary" data-cpt="1">Se connecter</button>' : ''}<button class="btn${cptOn() && !ACC ? '' : ' primary'}" data-lic="1">Entrer un code</button></div>`; }
 function exDone(k, ex){ if(ex.sv || ex.q3 || ex.pup) return !!(TRIES[k + ':1' + (ex.q3 ? ':cab' : '')] || {}).ok; return [1,2,3].some(l => (TRIES[k + ':' + l] || {}).ok != null); }
 function renderExList(){
   $('#btnProp').hidden = !(EDITION === 'prof' && DK);
@@ -4522,7 +4559,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.19.1';
+const APP_VERSION = '9.20';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4563,6 +4600,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.20', d:'9 novembre 2026', t:'Comptes élèves et suivi par le professeur', l:['Bouton « Se connecter » : avec le compte Google de l’école (…@elmarche.be) ou avec un code reçu par e-mail, pour n’importe quelle adresse.', 'Le professeur autorise chaque élève (ou tout un domaine). Un compte autorisé débloque tous les défis, sans code de licence ; le nom de l’élève vient de son compte.', 'Chaque essai (défis, fiches, 3Q, simulateur, pupitres) et chaque panne trouvée, avec sa note sur 20, est envoyé au professeur. Sans internet, les essais attendent sur l’appareil.', 'Page « Mes élèves » pour les professeurs : demandes d’accès à accepter ou refuser, classes, exercices réussis, nombre d’essais, notes de recherche de pannes. Tout est aussi dans le Google Sheet.', 'Les codes de licence restent valables, par exemple pour les autres écoles.']},
   {v:'9.19.1', d:'5 novembre 2026', t:'Version d’essai', l:['Sans code de licence, le dessin libre (hors exercices) est limité à 10 composants ; les jonctions ne comptent pas. Les trois défis d’essai ne sont pas limités.']},
   {v:'9.19', d:'5 novembre 2026', t:'Mode libre', l:['Nouveau bouton « Mode libre » à côté de « Filière » : il ouvre une page vierge avec le catalogue complet des composants, toutes filières confondues, pour dessiner et simuler ce qu’on veut.', 'Ouvrir un exercice, un défi ou une recherche de panne, ou choisir une filière, referme le mode libre. On peut aussi toucher à nouveau le bouton.']},
   {v:'9.18.1', d:'3 novembre 2026', t:'Transformateur 0-12-24 V', l:['Nouveau composant : transformateur de sécurité à trois bornes de sortie (0, 12 et 24 V).', 'Porte automatique : un seul transformateur T1 comme sur le banc ; 0-12 V vers le pont redresseur du moteur, 0-24 V pour la commande.']},
@@ -4992,7 +5030,7 @@ async function licDaily(){
   renderExList(); renderConsigne(); licRefusShow(msg);
 }
 function licRefusShow(msg){ openLic(); $('#licMsg').textContent = msg; }
-const licOK = () => !SECRET || EDITION === 'prof' || !!(LICS && LICS.valid);
+const licOK = () => !SECRET || EDITION === 'prof' || !!(LICS && LICS.valid) || accOK();
 const exFree = k => FREEK.has(k);
 function licParse(code){
   const c = String(code || '').toUpperCase().trim().replace(/[\s_.]+/g, '-').replace(/-+/g, '-');
@@ -5099,6 +5137,271 @@ $('#btnLic').onclick = openLic;
   if(ha){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
   await commLoad();
   if(ha) commPreview(ha[1]);
+})();
+
+/* ---------- compte : connexion (compte de l'école ou code par e-mail), accès autorisé par le prof, suivi des exercices ---------- */
+// adresses des deux déploiements du script du Google Sheet « Banc de câblage – données » (voir apps-script/Code.gs) ; vides = fonction absente
+var CPT = {loginUrl: '', apiUrl: ''};
+var CPTKEY = 'banc-cablage-compte', OUTKEY = 'banc-cablage-envois:', SEENKEY = 'banc-cablage-vus';
+var ACC = null, ACCPROF = false, accT = null, accBusy = false, cptStep = null;
+function cptOn(){ return !!(CPT && CPT.apiUrl && CPT.loginUrl); }
+function accOK(){ return !!(ACC && (ACC.statut === 'ok' || ACC.role === 'prof')); }
+function accLoad(){ try{ const a = JSON.parse(localStorage.getItem(CPTKEY) || 'null'); return a && a.cle ? a : null; }catch(e){ return null; } }
+function accSave(){ lsSet(CPTKEY, ACC ? JSON.stringify(ACC) : null); }
+async function accApi(a, q){
+  if(!cptOn()) throw new Error('Connexion non configurée.');
+  if(navigator.onLine === false) throw new Error('Pas de connexion internet.');
+  const ac = window.AbortController ? new AbortController() : null, t = ac && setTimeout(() => ac.abort(), 20000);
+  try{
+    const res = await fetch(CPT.apiUrl, {method:'POST', body: JSON.stringify(Object.assign({a, cle: ACC ? ACC.cle : undefined}, q || {})), signal: ac ? ac.signal : undefined, cache:'no-store', credentials:'omit'});
+    const j = await res.json();
+    if(!j.ok){ const e = new Error(j.erreur || 'Erreur du serveur.'); e.auth = j.auth; e.attente = j.attente; throw e; }
+    return j.data;
+  }catch(e){ if(e.name === 'AbortError') throw new Error('Le serveur ne répond pas. Réessaie.'); if(e instanceof TypeError) throw new Error('Serveur injoignable. Vérifie la connexion internet.'); throw e; }
+  finally{ if(t) clearTimeout(t); }
+}
+function accSet(cle){ ACC = {cle, statut:'attente', role:'eleve', complet:'', prenom:'', email:''}; accSave(); return accRefresh(true); }
+async function accRefresh(first){
+  if(!ACC) return;
+  try{
+    const m = await accApi('moi');
+    Object.assign(ACC, {email:m.email, role:m.role, statut:m.statut, classe:m.classe || '', nom:m.nom || '', prenom:m.prenom || '', complet:m.complet || '', classes:m.classes || [], codeProf:m.codeProf || ''});
+    accSave();
+  }catch(e){
+    if(e.auth){ ACC = null; accSave(); accUI(); flash(e.message); return; }
+    if(first) throw e;
+  }
+  accUI();
+  if(ACC.role === 'prof' && ACC.codeProf && !ACCPROF && EDITION !== 'prof'){ ACCPROF = true; try{ if(await licApply(ACC.codeProf, true, true)) lsSet('banc-cablage-licacc', '1'); }catch(e){} }
+  accFlush();
+}
+function accLogout(){
+  ACC = null; accSave(); ACCPROF = false;
+  if(lsGet('banc-cablage-licacc')){
+    // licence prof installée par le compte : on la retire avec la déconnexion
+    lsSet('banc-cablage-licacc', null);
+    if(LICS && licTracked(LICS)) licSrv({a:'rel', code:LICS.code, dev:devId()});
+    lsSet(LICKEY, null); lsSet(LCHK, null); location.reload(); return;
+  }
+  accUI(); flash('Tu es déconnecté sur cet appareil.');
+}
+function accUI(){
+  const b = $('#btnCompte'); if(!b) return;
+  b.hidden = !cptOn();
+  b.textContent = ACC ? '👤 ' + (ACC.prenom || ACC.complet || ACC.email || 'Mon compte') : 'Se connecter';
+  b.classList.toggle('on', !!ACC);
+  b.title = ACC ? 'Mon compte : ' + (ACC.email || '') : 'Se connecter pour que ton professeur suive tes exercices';
+  const i = $('#eleveNom');
+  if(i){ if(ACC && ACC.complet){ i.value = ACC.complet; i.readOnly = true; i.title = 'Nom de ton compte'; } else if(i.readOnly){ i.readOnly = false; i.value = wsGet(NAMEKEY) || ''; i.title = ''; } }
+  if(!$('#mCpt').hidden) cptRender();
+  renderExList(); renderConsigne();
+}
+
+/* essais → événements à envoyer (un par essai) */
+function accSeen(){ try{ return JSON.parse(wsGet(SEENKEY) || '{}') || {}; }catch(e){ return {}; } }
+function accInfo(k){
+  const [key, lvl, step] = k.split(':'), ex = EX[key] || {};
+  const type = ex.pup ? 'Pupitre' : ex.sv ? 'Simulateur du local' : ex.q3 ? '3Q' : step === 'id' ? 'Fiche · identification' : step === 'cab' ? 'Fiche · câblage' : ex.fiche ? 'Fiche · principe' : 'Défi';
+  const titre = (ex.title || (typeof COMM !== 'undefined' && COMM && COMM[key] && COMM[key].title) || key) + (ex.sv || ex.pup || ex.q3 ? '' : ' · niveau ' + (lvl || 1));
+  return {titre, lvl: +lvl || 1, type};
+}
+function accTrack(){
+  const seen = accSeen(); let ch = false;
+  Object.keys(seen).forEach(k => { if(!TRIES[k] || (TRIES[k].n || 0) < seen[k]){ delete seen[k]; ch = true; } });
+  Object.entries(TRIES).forEach(([k, r]) => {
+    const n = r.n || 0, s0 = seen[k] || 0;
+    if(n <= s0) return;
+    if(ACC){ const inf = accInfo(k); for(let i = s0 + 1; i <= n; i++) accEvent(Object.assign({k, ok: r.ok === i}, inf)); }
+    seen[k] = n; ch = true;
+  });
+  if(ch) wsSet(SEENKEY, JSON.stringify(seen));
+}
+function accDep(c, d, f){
+  if(!ACC) return;
+  const D = DEP[c.key] || {}, mins = Math.max(1, Math.round((d.done - d.t0) / 60000));
+  accEvent({k:'panne:' + c.key, titre:'Recherche de pannes · ' + (D.title || c.key), lvl:'', type:'panne', ok:true, note: depScore(d),
+    detail:`${depScore(d)}/20 · ${f ? f.d : ''} · ${mins} min · ${d.nV} mesures en tension, ${d.nR} en résistance · zone ${d.zoneOK ? 'correcte' : 'incorrecte'} · ${d.danger} mesure(s) dangereuse(s) · ${d.wrong} mauvaise(s) désignation(s)`});
+}
+function accOut(){ try{ return ACC ? JSON.parse(localStorage.getItem(OUTKEY + ACC.email) || '[]') : []; }catch(e){ return []; } }
+function accOutSet(l){ if(ACC) lsSet(OUTKEY + ACC.email, l.length ? JSON.stringify(l) : null); }
+function accEvent(e){
+  if(!ACC || !ACC.email) return;
+  const id = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  const l = accOut(); l.push(Object.assign({id, t: Date.now()}, e)); accOutSet(l.slice(-500));
+  clearTimeout(accT); accT = setTimeout(accFlush, 1500);
+}
+async function accFlush(){
+  if(!ACC || !accOK() || accBusy || navigator.onLine === false) return;
+  const l = accOut(); if(!l.length) return;
+  accBusy = true;
+  try{
+    const r = await accApi('envoyer', {ev: l.slice(0, 100)});
+    const got = new Set(r.recus || []);
+    accOutSet(accOut().filter(e => !got.has(e.id)));
+    if(l.length > 100) setTimeout(accFlush, 500);
+  }catch(e){ if(e.auth){ ACC = null; accSave(); accUI(); } }
+  finally{ accBusy = false; if(!$('#mCpt').hidden) cptRender(); }
+}
+
+/* fenêtre « Se connecter / Mon compte » */
+function openCpt(){ cptStep = cptStep && !ACC ? cptStep : null; $('#mEx').hidden = true; $('#mLic').hidden = true; cptRender(); $('#mCpt').hidden = false; }
+function cptRender(){
+  const B = $('#cptBody');
+  if(!ACC){
+    $('#cptH').textContent = 'Se connecter';
+    let ios = false; try{ ios = /iPhone|iPad|iPod/.test(navigator.userAgent) && (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches); }catch(e){}
+    B.innerHTML = `<p style="margin:0">Connecte-toi pour que ton professeur suive tes exercices. Une fois ton accès autorisé, tous les défis sont débloqués, sans code de licence.</p>
+      <div class="box"><h3>Avec mon compte de l’école</h3><p class="mut" style="margin:0;font-size:13.5px">Pour les adresses …@elmarche.be. Une page Google s’ouvre, puis reviens ici.${ios ? ' Sur iPhone avec l’app installée, utilise plutôt le code par e-mail.' : ''}</p>
+        <div class="row"><button class="btn primary" id="cptG">Se connecter avec Google</button></div></div>
+      <div class="box"><h3>Avec un code reçu par e-mail</h3>
+        ${cptStep && cptStep.email ? `<p style="margin:0;font-size:14px">Code envoyé à <b>${esc(cptStep.email)}</b>. Regarde ta boîte mail (et les indésirables).</p>
+          <form class="row" id="cptF2"><input id="cptCode" inputmode="numeric" autocomplete="one-time-code" maxlength="7" placeholder="123456" style="width:9em;font-family:var(--font-mono);letter-spacing:.15em"><button class="btn primary" type="submit">Valider</button><button class="btn ghost" type="button" id="cptBack">Autre adresse</button></form>`
+        : `<form class="row" id="cptF1"><input id="cptMail" type="email" autocomplete="email" placeholder="prenom.nom.student@elmarche.be" style="flex:1;min-width:14em" value="${esc(cptStep && cptStep.prev || '')}"><button class="btn" type="submit">Recevoir un code</button></form>`}
+        <div class="msg" id="cptMsg"></div></div>
+      <p class="mut" style="margin:0;font-size:13px">Pas de compte ? <a href="#" id="cptLic">Entrer un code de licence</a>.</p>`;
+    $('#cptG').onclick = () => { if(navigator.onLine === false){ cptMsg('La connexion demande internet.', true); return; } window.open(CPT.loginUrl, '_blank'); cptMsg('Termine la connexion dans la page Google qui vient de s’ouvrir.'); };
+    $('#cptLic').onclick = e => { e.preventDefault(); $('#mCpt').hidden = true; openLic(); };
+    const f1 = $('#cptF1');
+    if(f1) f1.onsubmit = async e => {
+      e.preventDefault(); const em = $('#cptMail').value.trim().toLowerCase(); if(!em) return;
+      cptMsg('Envoi du code…');
+      try{
+        const r = await accApi('codeDemander', {email: em});
+        if(r.envoye){ cptStep = {email: em}; cptRender(); setTimeout(() => { try{ $('#cptCode').focus(); }catch(e){} }, 50); }
+        else cptMsg(r.message, true);
+      }catch(err){ cptMsg(err.message, true); }
+    };
+    const f2 = $('#cptF2');
+    if(f2){
+      $('#cptBack').onclick = () => { cptStep = {prev: cptStep.email}; cptRender(); };
+      f2.onsubmit = async e => {
+        e.preventDefault(); const code = $('#cptCode').value.replace(/\D/g, ''); if(code.length !== 6){ cptMsg('Le code a 6 chiffres.', true); return; }
+        cptMsg('Vérification…');
+        try{ const r = await accApi('codeVerifier', {email: cptStep.email, code}); cptStep = null; await accSet(r.cle); accWelcome(); }
+        catch(err){ cptMsg(err.message, true); }
+      };
+    }
+    return;
+  }
+  $('#cptH').textContent = 'Mon compte';
+  const out = accOut().length, cl = ACC.classes || [];
+  const st = ACC.role === 'prof' ? '<div class="st ok">Compte professeur : tous les défis sont débloqués.</div>'
+    : ACC.statut === 'ok' ? `<div class="st ok">Accès autorisé${ACC.classe ? ' · classe ' + esc(ACC.classe) : ''} : tous les défis sont débloqués et tes exercices sont suivis par ton professeur.</div>`
+    : ACC.statut === 'refuse' ? '<div class="st">Ton accès a été refusé. Parles-en à ton professeur. La version d’essai reste disponible.</div>'
+    : `<div class="st">Ta demande d’accès est envoyée : ton professeur doit l’accepter. En attendant, la version d’essai reste disponible.</div>
+       ${cl.length ? `<form class="row" id="cptCl"><label style="font-size:14px">Ma classe <select id="cptClasse"><option value="">Choisir…</option>${cl.map(c => `<option${c === ACC.classe ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label><button class="btn" type="submit">Envoyer</button></form>` : ''}`;
+  B.innerHTML = `<p style="margin:0"><b>${esc(ACC.complet || ACC.email)}</b><br><span class="mut">${esc(ACC.email || '')}</span></p>${st}
+    ${ACC.role !== 'prof' ? `<p class="mut" style="margin:0;font-size:13.5px">${out ? `${out} essai${out > 1 ? 's' : ''} en attente d’envoi${navigator.onLine === false ? ' (pas d’internet)' : ''}.` : 'Tous tes essais sont envoyés.'}</p>` : ''}
+    <div class="row">${ACC.role === 'prof' ? '<button class="btn primary" id="cptEl">Mes élèves</button>' : ''}<button class="btn" id="cptRef">Actualiser</button><button class="btn ghost" id="cptOut">Se déconnecter</button></div>
+    <div class="msg" id="cptMsg"></div>
+    <p class="mut" style="margin:0;font-size:12.5px">Sur un ordinateur partagé, pense à te déconnecter à la fin.</p>`;
+  $('#cptRef').onclick = async () => { cptMsg('Actualisation…'); try{ await accRefresh(true); cptMsg(''); }catch(e){ cptMsg(e.message, true); } };
+  $('#cptOut').onclick = () => { $('#mCpt').hidden = true; accLogout(); };
+  const el = $('#cptEl'); if(el) el.onclick = () => { $('#mCpt').hidden = true; openEl(); };
+  const fc = $('#cptCl');
+  if(fc) fc.onsubmit = async e => { e.preventDefault(); const c = $('#cptClasse').value; if(!c) return; cptMsg('Envoi…'); try{ const m = await accApi('demande', {classe: c}); ACC.classe = m.classe || c; accSave(); cptMsg('Classe envoyée à ton professeur.'); }catch(err){ cptMsg(err.message, true); } };
+}
+function cptMsg(t, ko){ const m = $('#cptMsg'); if(m){ m.textContent = t || ''; m.classList.toggle('ko', !!ko); } }
+function accWelcome(){
+  if(!ACC) return;
+  $('#mCpt').hidden = !ACC || ACC.role === 'prof' || ACC.statut === 'ok' ? true : false;
+  if(!$('#mCpt').hidden) cptRender();
+  flash(ACC.role === 'prof' ? `Connecté : ${ACC.complet || ACC.email} (professeur).` : ACC.statut === 'ok' ? `Connecté : ${ACC.complet || ACC.email}. Tous les défis sont débloqués.` : `Connecté : ${ACC.complet || ACC.email}. Ton professeur doit encore autoriser ton accès.`);
+}
+
+/* page « Mes élèves » (professeurs) */
+var EL = null, ELF = {cl:'', q:'', open:''};
+function openEl(){ $('#mEl').hidden = false; elLoad(); }
+async function elLoad(act, q){
+  const B = $('#elBody');
+  if(!EL) B.innerHTML = '<p class="mut">Chargement…</p>';
+  try{
+    EL = await accApi(act || 'profDonnees', q);
+    if(!act && ELF.cl === '' && EL.mesClasses && EL.mesClasses.length) ELF.cl = 'mes';
+    elRender();
+  }catch(e){ if(EL){ elRender(); const m = $('#elMsg'); if(m){ m.textContent = e.message; m.className = 'ko'; } } else B.innerHTML = `<p class="ko">${esc(e.message)}</p>`; }
+}
+const elDate = ms => ms ? new Date(ms).toLocaleDateString('fr-BE', {day:'2-digit', month:'2-digit'}) + ' ' + new Date(ms).toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'}) : '';
+function elRender(){
+  const D = EL, B = $('#elBody'), cls = D.classes || [];
+  const opt = (sel, none) => `<option value="">${none}</option>` + cls.map(c => `<option${c === sel ? ' selected' : ''}>${esc(c)}</option>`).join('');
+  const pend = D.demandes.filter(d => !/refus/i.test(d.statut)), refused = D.demandes.filter(d => /refus/i.test(d.statut));
+  // élèves : adresses autorisées une par une + adresses vues dans les résultats (accès par domaine)
+  const stu = new Map();
+  D.autorises.filter(a => a.adresse[0] !== '@').forEach(a => stu.set(a.adresse, {adresse:a.adresse, nom:a.nom, classe:a.classe, res:[]}));
+  D.resultats.forEach(r => { if(!stu.has(r.adresse)) stu.set(r.adresse, {adresse:r.adresse, nom:r.nom, classe:r.classe, res:[], dom:true}); const s = stu.get(r.adresse); s.res.push(r); if(!s.nom) s.nom = r.nom; if(!s.classe) s.classe = r.classe; });
+  const mine = new Set(D.mesClasses || []);
+  let list = [...stu.values()].filter(s => ELF.cl === 'mes' ? mine.has(s.classe) : ELF.cl ? s.classe === ELF.cl : true);
+  const q = ELF.q.trim().toLowerCase(); if(q) list = list.filter(s => (s.nom + ' ' + s.adresse).toLowerCase().includes(q));
+  list.sort((a, b) => (a.classe || '~').localeCompare(b.classe || '~') || (a.nom || a.adresse).localeCompare(b.nom || b.adresse));
+  const doms = D.autorises.filter(a => a.adresse[0] === '@');
+  let h = `<div id="elMsg"></div>`;
+  h += `<section><h3>Demandes d’accès (${pend.length})</h3>` + (pend.length ? `<div class="scroll"><table><tr><th>Élève</th><th class="hide-s">Demandé le</th><th>Classe</th><th></th></tr>` +
+    pend.map(d => `<tr data-a="${esc(d.adresse)}"><td><b>${esc(d.nom || d.adresse)}</b><br><span class="mut">${esc(d.adresse)}</span>${d.verifiee ? '' : '<span class="tag" title="L’adresse n’a pas encore été confirmée (code ou compte Google)">non vérifiée</span>'}${/retir/i.test(d.statut) ? '<span class="tag">accès retiré</span>' : ''}</td>
+      <td class="hide-s">${elDate(d.le)}</td><td><select class="elCl">${opt(d.classe, 'Classe…')}</select></td>
+      <td><div class="row"><button class="btn primary" data-ok="1">Autoriser</button><button class="btn ghost" data-no="1">Refuser</button></div></td></tr>`).join('') + `</table></div>`
+    : '<p class="mut" style="margin:4px 0 0">Aucune demande en attente.</p>') + (refused.length ? `<details style="margin-top:6px"><summary class="mut">Demandes refusées (${refused.length})</summary><table>${refused.map(d => `<tr data-a="${esc(d.adresse)}"><td>${esc(d.nom || d.adresse)} <span class="mut">${esc(d.adresse)}</span></td><td><select class="elCl">${opt(d.classe, 'Classe…')}</select></td><td><button class="btn" data-ok="1">Autoriser</button></td></tr>`).join('')}</table></details>` : '') + `</section>`;
+  h += `<section><h3>Élèves (${list.length})</h3><div class="row" style="margin:6px 0"><select id="elFcl"><option value="">Toutes les classes</option>${mine.size ? `<option value="mes"${ELF.cl === 'mes' ? ' selected' : ''}>Mes classes</option>` : ''}${cls.map(c => `<option${c === ELF.cl ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select><input id="elQ" placeholder="Rechercher un élève" value="${esc(ELF.q)}" style="flex:1;min-width:10em"></div>`;
+  h += list.length ? `<div class="scroll"><table><tr><th>Élève</th><th>Classe</th><th>Réussis</th><th class="hide-s">Essais</th><th class="hide-s">Pannes</th><th class="hide-s">Dernière activité</th></tr>` + list.map(s => {
+      const ex = s.res.filter(r => r.type !== 'panne'), pn = s.res.filter(r => r.type === 'panne');
+      const ok = ex.filter(r => r.reussi).length, ess = ex.reduce((a, r) => a + r.essais, 0), last = Math.max(0, ...s.res.map(r => r.dernier));
+      const notes = pn.filter(r => r.note != null).map(r => r.note), moy = notes.length ? Math.round(notes.reduce((a, b) => a + b, 0) / notes.length * 2) / 2 : null;
+      const op = ELF.open === s.adresse;
+      let row = `<tr class="stu" data-s="${esc(s.adresse)}"><td><b>${esc(s.nom || s.adresse)}</b>${s.dom ? '<span class="tag" title="Autorisé par son domaine">domaine</span>' : ''}<br><span class="mut">${esc(s.adresse)}</span></td><td>${esc(s.classe || '—')}</td>
+        <td>${ok} / ${ex.length}</td><td class="hide-s">${ess}</td><td class="hide-s">${pn.length ? pn.reduce((a, r) => a + r.essais, 0) + (moy != null ? ` · moy. ${String(moy).replace('.', ',')}/20` : '') : '—'}</td><td class="hide-s">${elDate(last) || '—'}</td></tr>`;
+      if(op){
+        const rs = s.res.slice().sort((a, b) => b.dernier - a.dernier);
+        row += `<tr class="det" data-a="${esc(s.adresse)}"><td colspan="6">${rs.length ? `<ul>${rs.map(r => `<li><b>${esc(r.titre)}</b> <span class="mut">(${esc(r.type)})</span> : ` +
+            (r.type === 'panne' ? `${r.essais} panne${r.essais > 1 ? 's' : ''} trouvée${r.essais > 1 ? 's' : ''}${r.note != null ? `, meilleure note <b>${String(r.note).replace('.', ',')}/20</b>` : ''}`
+              : r.reussi ? `<span class="ok">réussi</span> au ${nth(r.n)} essai (${elDate(r.reussiLe)})${r.essais > r.n ? `, ${r.essais} essais en tout` : ''}` : `${r.essais} essai${r.essais > 1 ? 's' : ''}, pas encore réussi`) +
+            ` <span class="mut">· ${elDate(r.dernier)}</span></li>`).join('')}</ul>` : '<p class="mut">Aucun exercice enregistré pour l’instant.</p>'}
+          ${s.dom ? '' : `<div class="row"><label style="font-size:14px">Classe <select class="elCl">${opt(s.classe, '—')}</select></label><button class="btn" data-cl="1">Changer</button><button class="btn ghost" data-del="1">Retirer l’accès</button></div>`}</td></tr>`;
+      }
+      return row;
+    }).join('') + `</table></div>` : '<p class="mut">Aucun élève' + (ELF.cl || q ? ' pour ce filtre' : ' autorisé pour l’instant') + '.</p>';
+  h += `</section>`;
+  h += `<section><h3>Ajouter un accès</h3><p class="mut" style="margin:2px 0 6px">Une adresse (élève, collègue d’une autre école…) ou tout un domaine, par exemple <b>@ecole.be</b>.</p>
+    <form class="row" id="elAdd"><input id="elAdr" placeholder="adresse@ecole.be ou @domaine.be" style="flex:2;min-width:14em"><input id="elNom" placeholder="Nom Prénom (facultatif)" style="flex:1;min-width:10em"><select id="elAddCl">${opt('', 'Classe…')}</select><button class="btn primary" type="submit">Ajouter</button></form>
+    ${doms.length ? `<p class="mut" style="margin:8px 0 2px">Domaines autorisés :</p><table>${doms.map(a => `<tr data-a="${esc(a.adresse)}"><td><b>${esc(a.adresse)}</b> ${a.classe ? '· ' + esc(a.classe) : ''}</td><td><button class="btn ghost" data-del="1">Retirer</button></td></tr>`).join('')}</table>` : ''}</section>
+    <p class="mut">Tout est aussi dans le Google Sheet « Banc de câblage – données » (onglets Résultats et Journal).</p>`;
+  B.innerHTML = h;
+  $('#elFcl').onchange = e => { ELF.cl = e.target.value; elRender(); };
+  $('#elQ').oninput = e => { ELF.q = e.target.value; clearTimeout(elRender.t); elRender.t = setTimeout(() => { elRender(); const i = $('#elQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 300); };
+  B.querySelectorAll('tr.stu').forEach(tr => tr.onclick = () => { ELF.open = ELF.open === tr.dataset.s ? '' : tr.dataset.s; elRender(); });
+  const row = b => b.closest('tr[data-a]'), clOf = tr => { const s = tr.querySelector('.elCl'); return s ? s.value : ''; };
+  B.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { const tr = row(b); elLoad('profAutoriser', {adresse: tr.dataset.a, classe: clOf(tr)}); });
+  B.querySelectorAll('[data-no]').forEach(b => b.onclick = () => elLoad('profRefuser', {adresse: row(b).dataset.a}));
+  B.querySelectorAll('[data-cl]').forEach(b => b.onclick = () => { const tr = row(b); elLoad('profClasse', {adresse: tr.dataset.a, classe: clOf(tr)}); });
+  B.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
+    const a = row(b).dataset.a;
+    if(b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Confirmer ?'; b.classList.add('primary'); setTimeout(() => { if(b.isConnected){ b.dataset.armed = ''; b.textContent = a[0] === '@' ? 'Retirer' : 'Retirer l’accès'; b.classList.remove('primary'); } }, 3000); return; }
+    elLoad('profRetirer', {adresse: a});
+  });
+  $('#elAdd').onsubmit = e => { e.preventDefault(); const a = $('#elAdr').value.trim(); if(!a) return; elLoad('profAutoriser', {adresse: a, nom: $('#elNom').value.trim(), classe: $('#elAddCl').value}); };
+}
+
+/* démarrage du compte */
+(() => {
+  const hm = /[#&]cle=([\w.\-]+)/.exec(location.hash);
+  if(hm){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
+  ACC = accLoad();
+  if(hm && cptOn()){
+    ACC = {cle: hm[1], statut:'attente', role:'eleve', complet:'', prenom:'', email:''}; accSave();
+    accRefresh(true).then(() => { accWelcome(); }).catch(e => flash(e.message));
+  } else if(ACC && cptOn()) accRefresh(false);
+  accUI();
+  $('#btnCompte').onclick = openCpt;
+  $('#elRef').onclick = () => elLoad();
+  document.addEventListener('click', e => { const b = e.target.closest('[data-cpt]'); if(b){ e.preventDefault(); openCpt(); } });
+  window.addEventListener('storage', e => {
+    if(e.key !== CPTKEY) return;
+    const a = accLoad(), had = ACC && ACC.cle;
+    ACC = a; accUI();
+    if(a && a.cle !== had){ $('#mCpt').hidden = true; if(a.email) accWelcome(); else accRefresh(false).then(accWelcome); }
+  });
+  window.addEventListener('online', () => { if(ACC) accRefresh(false); });
+  document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') accFlush(); });
+  setInterval(() => { if(ACC && accOut().length) accFlush(); }, 60000);
 })();
 
 /* ---------- notes de théorie (une par notion, reliées aux exercices) ---------- */
@@ -5510,7 +5813,7 @@ requestAnimationFrame(() => { render(); fit(); });
       '<li>iPhone, iPad : ouvre la page dans Safari, touche Partager, puis « Sur l’écran d’accueil ».</li>' +
       '<li>Une fois ouverte une première fois, l’application fonctionne aussi sans connexion.</li></ul>';
     const about = [...help.querySelectorAll('h3')].find(h => h.textContent.trim() === 'À propos');
-    help.insertBefore(sec, about || null);
+    if(about && about.parentNode) about.parentNode.insertBefore(sec, about); else help.appendChild(sec);
   }
 })();
 </script>
