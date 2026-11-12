@@ -13,8 +13,12 @@
  * Mise à jour : recoller le code, exécuter « installer », puis Gérer les déploiements › crayon ›
  * Nouvelle version, pour CHACUN des deux déploiements (les adresses ne changent pas).
  *
- * Facultatif : dans Paramètres du projet › Propriétés du script, ajouter CODE_PROF = votre code de
- * licence prof. Les professeurs connectés passent alors automatiquement en mode prof.
+ * Rôles : onglet Profs. La remarque « Propriétaire » (ou « Admin ») donne le rôle administrateur
+ * (gestion des licences et des professeurs dans l'app) ; les autres adresses sont professeurs ;
+ * toute autre adresse est un élève (accès à autoriser).
+ * Mode prof : dans Paramètres du projet › Propriétés du script, ajouter CLE_PROF = la clé du mode prof
+ * (les 8 derniers caractères d'un code de licence prof). Les profs connectés voient alors les solutions,
+ * sans utiliser de licence.
  */
 
 const DOMAINE = 'elmarche.be';
@@ -74,7 +78,7 @@ function doGet() {
     if (st.statut !== 'ok') noterDemande_(email, '', true);
     const n = nomDe_(email);
     corps = `<h1>Bonjour ${html_(n.prenom)} !</h1>
-      <p>Vous êtes connecté avec <b>${html_(email)}</b>${st.role === 'prof' ? ' (professeur)' : ''}.</p>
+      <p>Vous êtes connecté avec <b>${html_(email)}</b>${st.role === 'admin' ? ' (administrateur)' : st.role === 'prof' ? ' (professeur)' : ''}.</p>
       ${st.statut === 'ok' ? '' : st.statut === 'refuse' ? '<p>Votre accès a été refusé. Parlez-en à votre professeur.</p>' : '<p>Votre demande d’accès est envoyée : votre professeur doit vous autoriser. En attendant, la version d’essai reste disponible.</p>'}
       <a class="btn" href="${APP_URL}#cle=${cle}" target="_top">Ouvrir le Banc de câblage</a>
       <p class="petit">L'app garde votre connexion pendant ${DUREE_CLE_JOURS} jours, même sans internet.</p>`;
@@ -123,6 +127,9 @@ const ACTIONS = {
   profRefuser: (u, q) => (prof_(u), refuser_(u, String(q.adresse || '')), profDonnees_(u)),
   profRetirer: (u, q) => (prof_(u), retirer_(String(q.adresse || '')), profDonnees_(u)),
   profClasse: (u, q) => (prof_(u), changerClasse_(String(q.adresse || ''), String(q.classe || '')), profDonnees_(u)),
+  adminProfs: (u) => (admin_(u), listeProfsAdmin_()),
+  adminProfAjouter: (u, q) => (admin_(u), profAjouter_(String(q.adresse || ''), String(q.nom || '')), listeProfsAdmin_()),
+  adminProfRetirer: (u, q) => (admin_(u), profRetirer_(u, String(q.adresse || '')), listeProfsAdmin_()),
 };
 
 /* =========================================================
@@ -168,12 +175,15 @@ function nomDe_(email) {
   return { prenom, nom, complet: (nom ? nom + ' ' : '') + prenom };
 }
 function profDe_(email) { return lignes_('profs').find(r => adr_(r[0]) === email); }
-function prof_(u) { if (u.role !== 'prof') throw new Error('Réservé aux professeurs.'); }
+function prof_(u) { if (u.role !== 'prof' && u.role !== 'admin') throw new Error('Réservé aux professeurs.'); }
+function admin_(u) { if (u.role !== 'admin') throw new Error('Réservé à l’administrateur (onglet Profs, remarque « Propriétaire »).'); }
+const estAdminLigne_ = r => /propri|admin/i.test(String(r[2] || ''));
 function listeClasses_() { return lignes_('classes').filter(r => String(r[0]).trim()).map(r => ({ classe: String(r[0]).trim(), prof: adr_(r[1]) })); }
 
 /* Statut d'une adresse : prof, autorisée (adresse ou @domaine), refusée ou en attente */
 function statut_(email) {
-  if (profDe_(email)) return { role: 'prof', statut: 'ok', classe: '' };
+  const p = profDe_(email);
+  if (p) return { role: estAdminLigne_(p) ? 'admin' : 'prof', statut: 'ok', classe: '' };
   const dom = '@' + email.split('@')[1];
   const aut = lignes_('autorises');
   const a = aut.find(r => adr_(r[0]) === email) || aut.find(r => adr_(r[0]) === dom);
@@ -239,9 +249,9 @@ function codeVerifier_(brut, code) {
 function moi_(u) {
   const n = nomDe_(u.email);
   const res = { email: u.email, role: u.role, statut: u.statut, classe: u.classe, nom: n.nom, prenom: n.prenom, complet: n.complet, classes: listeClasses_().map(c => c.classe) };
-  if (u.role === 'prof') {
+  if (u.role === 'prof' || u.role === 'admin') {
     const p = profDe_(u.email); if (p && String(p[1]).trim()) res.complet = String(p[1]).trim();
-    const cp = PropertiesService.getScriptProperties().getProperty('CODE_PROF'); if (cp) res.codeProf = cp;
+    const cp = PropertiesService.getScriptProperties().getProperty('CLE_PROF'); if (cp) res.cleProf = String(cp).trim().toUpperCase();
   }
   return res;
 }
@@ -320,5 +330,29 @@ function changerClasse_(brut, classe) {
   verrou_(() => {
     const sh = onglet_('autorises'), rows = lignes_('autorises'), i = rows.findIndex(r => adr_(r[0]) === a);
     if (i >= 0) sh.getRange(i + 2, 3).setValue(classe);
+  });
+}
+
+/* =========================================================
+   Administrateur : professeurs
+   ========================================================= */
+function listeProfsAdmin_() {
+  return lignes_('profs').filter(r => String(r[0]).trim()).map(r => ({ adresse: adr_(r[0]), nom: String(r[1] || ''), admin: estAdminLigne_(r) }));
+}
+function profAjouter_(brut, nom) {
+  const a = adr_(brut);
+  if (!emailValide_(a)) throw new Error('Adresse e-mail non valide.');
+  verrou_(() => {
+    const sh = onglet_('profs'), rows = lignes_('profs'), i = rows.findIndex(r => adr_(r[0]) === a);
+    if (i < 0) sh.appendRow([a, nom || nomDe_(a).complet, '']);
+    else if (nom) sh.getRange(i + 2, 2).setValue(nom);
+  });
+}
+function profRetirer_(u, brut) {
+  const a = adr_(brut);
+  if (a === u.email) throw new Error('Tu ne peux pas te retirer toi-même.');
+  verrou_(() => {
+    const sh = onglet_('profs'), rows = lignes_('profs');
+    for (let i = rows.length - 1; i >= 0; i--) if (adr_(rows[i][0]) === a) { if (estAdminLigne_(rows[i])) throw new Error('Un administrateur se retire dans le Google Sheet.'); sh.deleteRow(i + 2); }
   });
 }
