@@ -120,7 +120,7 @@ const PUBLIQUES = {
 // avec clé
 const ACTIONS = {
   moi: (u, q) => { if (u.statut === 'attente' && !lignes_('demandes').some(r => adr_(r[0]) === u.email)) noterDemande_(u.email, '', true); return moi_(u, q); },
-  demande: (u, q) => (noterDemande_(u.email, String(q.classe || ''), true), moi_(u, {})),
+  demande: (u, q) => (maClasse_(u, String(q.classe || '')), moi_(Object.assign({ email: u.email }, statut_(u.email)), {})),
   envoyer: (u, q) => envoyer_(u, Array.isArray(q.ev) ? q.ev : []),
   profDonnees: (u) => (prof_(u), profDonnees_(u)),
   profAutoriser: (u, q) => (admin_(u), autoriser_(u, String(q.adresse || ''), String(q.classe || ''), String(q.nom || '')), profDonnees_(u)),
@@ -434,5 +434,28 @@ function classeRetirer_(nom) {
   verrou_(() => {
     const sh = onglet_('classes'), rows = lignes_('classes');
     for (let i = rows.length - 1; i >= 0; i--) if (String(rows[i][0]).trim() === nom) sh.deleteRow(i + 2);
+  });
+}
+
+/* =========================================================
+   Élève : choisir ou créer sa classe (l'administrateur corrige si besoin)
+   ========================================================= */
+function maClasse_(u, brut) {
+  const cl = String(brut || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+  if (!cl) throw new Error('Indique ta classe.');
+  verrou_(() => {
+    const cs = onglet_('classes'), crows = lignes_('classes');
+    const ex = crows.find(r => String(r[0]).trim().toLowerCase() === cl.toLowerCase());
+    const nom = ex ? String(ex[0]).trim() : cl;
+    if (!ex) {
+      if (crows.length >= 80) throw new Error('Trop de classes : demande à ton professeur de l’ajouter.');
+      cs.appendRow([nom, '', 'Ajoutée par ' + u.email]);
+    }
+    if (u.role !== 'eleve') return;
+    const as = onglet_('autorises'), arows = lignes_('autorises'), ai = arows.findIndex(r => adr_(r[0]) === u.email);
+    if (ai >= 0) as.getRange(ai + 2, 3).setValue(nom);
+    const ds = onglet_('demandes'), drows = lignes_('demandes'), di = drows.findIndex(r => adr_(r[0]) === u.email);
+    if (di >= 0) ds.getRange(di + 2, 3).setValue(nom);
+    else if (ai < 0) ds.appendRow([u.email, nomDe_(u.email).complet, nom, new Date(), true, 'En attente', '', '']);
   });
 }
