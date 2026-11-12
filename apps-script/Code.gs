@@ -123,13 +123,15 @@ const ACTIONS = {
   demande: (u, q) => (noterDemande_(u.email, String(q.classe || ''), true), moi_(u, {})),
   envoyer: (u, q) => envoyer_(u, Array.isArray(q.ev) ? q.ev : []),
   profDonnees: (u) => (prof_(u), profDonnees_(u)),
-  profAutoriser: (u, q) => (prof_(u), autoriser_(u, String(q.adresse || ''), String(q.classe || ''), String(q.nom || '')), profDonnees_(u)),
-  profRefuser: (u, q) => (prof_(u), refuser_(u, String(q.adresse || '')), profDonnees_(u)),
-  profRetirer: (u, q) => (prof_(u), retirer_(String(q.adresse || '')), profDonnees_(u)),
-  profClasse: (u, q) => (prof_(u), changerClasse_(String(q.adresse || ''), String(q.classe || '')), profDonnees_(u)),
+  profAutoriser: (u, q) => (admin_(u), autoriser_(u, String(q.adresse || ''), String(q.classe || ''), String(q.nom || '')), profDonnees_(u)),
+  profRefuser: (u, q) => (admin_(u), refuser_(u, String(q.adresse || '')), profDonnees_(u)),
+  profRetirer: (u, q) => (admin_(u), retirer_(String(q.adresse || '')), profDonnees_(u)),
+  profClasse: (u, q) => (admin_(u), changerClasse_(String(q.adresse || ''), String(q.classe || '')), profDonnees_(u)),
   adminProfs: (u) => (admin_(u), listeProfsAdmin_()),
   adminProfAjouter: (u, q) => (admin_(u), profAjouter_(String(q.adresse || ''), String(q.nom || '')), listeProfsAdmin_()),
   adminProfRetirer: (u, q) => (admin_(u), profRetirer_(u, String(q.adresse || '')), listeProfsAdmin_()),
+  adminImporter: (u, q) => (admin_(u), importer_(u, Array.isArray(q.lignes) ? q.lignes : [], String(q.classe || '')), profDonnees_(u)),
+  adminSolutions: (u, q) => (admin_(u), solutions_(u, String(q.adresse || ''), !!q.on), profDonnees_(u)),
 };
 
 /* =========================================================
@@ -297,7 +299,10 @@ function profDonnees_(u) {
     .map(r => ({ adresse: adr_(r[0]), nom: String(r[1] || ''), classe: String(r[2] || ''), le: dateMs_(r[3]), verifiee: r[4] === true, statut: String(r[5] || '') }));
   const res = lignes_('resultats').filter(r => String(r[0]).trim()).map(r => ({ adresse: adr_(r[0]), nom: String(r[1] || ''), classe: String(r[2] || ''), k: String(r[3]), titre: String(r[4]), lvl: String(r[5]), type: String(r[6]),
     essais: Number(r[7]) || 0, reussi: r[8] === true, n: Number(r[9]) || 0, premier: dateMs_(r[10]), reussiLe: dateMs_(r[11]), dernier: dateMs_(r[12]), note: r[13] === '' ? null : Number(r[13]) }));
-  return { moi: u.email, classes: classes.map(c => c.classe), mesClasses, autorises: aut, demandes: dem, resultats: res };
+  const out = { moi: u.email, admin: u.role === 'admin', classes: classes.map(c => c.classe), mesClasses, autorises: aut, demandes: dem, resultats: res };
+  out.profs = listeProfsAdmin_();
+  if (u.role !== 'admin') { out.demandes = []; }
+  return out;
 }
 function autoriser_(u, brut, classe, nom) {
   const a = adr_(brut);
@@ -323,6 +328,8 @@ function retirer_(brut) {
     const sh = onglet_('autorises'), rows = lignes_('autorises');
     for (let i = rows.length - 1; i >= 0; i--) if (adr_(rows[i][0]) === a) sh.deleteRow(i + 2);
     marquerDemande_(a, 'Accès retiré', '');
+    const ps = onglet_('profs'), pr = lignes_('profs');
+    for (let i = pr.length - 1; i >= 0; i--) if (adr_(pr[i][0]) === a && !estAdminLigne_(pr[i])) ps.deleteRow(i + 2);
   });
 }
 function changerClasse_(brut, classe) {
@@ -354,5 +361,49 @@ function profRetirer_(u, brut) {
   verrou_(() => {
     const sh = onglet_('profs'), rows = lignes_('profs');
     for (let i = rows.length - 1; i >= 0; i--) if (adr_(rows[i][0]) === a) { if (estAdminLigne_(rows[i])) throw new Error('Un administrateur se retire dans le Google Sheet.'); sh.deleteRow(i + 2); }
+  });
+}
+
+/* =========================================================
+   Administrateur : import d'une liste d'élèves, case « voit les solutions »
+   ========================================================= */
+function importer_(u, lignes, classeDefaut) {
+  if (lignes.length > 1500) throw new Error('Liste trop longue (1500 lignes au plus).');
+  let n = 0;
+  verrou_(() => {
+    const sh = onglet_('autorises'), rows = lignes_('autorises'), idx = new Map(rows.map((r, i) => [adr_(r[0]), i]));
+    const profs = new Set(lignes_('profs').map(r => adr_(r[0])));
+    const ajout = [];
+    lignes.forEach(l => {
+      const a = adr_(l && l.adresse);
+      if (!emailValide_(a) || profs.has(a)) return;
+      const nom = String(l.nom || '').trim().slice(0, 80), cl = String(l.classe || classeDefaut || '').trim().slice(0, 40);
+      const i = idx.get(a);
+      if (i === undefined) { ajout.push([a, nom || nomDe_(a).complet, cl, u.email, new Date(), 'Import']); idx.set(a, -1); n++; }
+      else if (i >= 0) { const r = rows[i]; sh.getRange(i + 2, 2, 1, 2).setValues([[nom || r[1], cl || r[2]]]); n++; }
+    });
+    if (ajout.length) sh.getRange(sh.getLastRow() + 1, 1, ajout.length, 6).setValues(ajout);
+    // les demandes de ces adresses sont acceptées
+    const dsh = onglet_('demandes'), drows = lignes_('demandes'), set = new Set(lignes.map(l => adr_(l && l.adresse)));
+    drows.forEach((r, i) => { if (set.has(adr_(r[0])) && !/accept/i.test(String(r[5]))) dsh.getRange(i + 2, 6, 1, 3).setValues([['Acceptée', u.email, new Date()]]); });
+  });
+  return n;
+}
+function solutions_(u, brut, on) {
+  const a = adr_(brut);
+  if (!emailValide_(a)) throw new Error('Adresse e-mail non valide.');
+  if (a === u.email) throw new Error('Ton propre compte garde toujours les solutions.');
+  verrou_(() => {
+    const ps = onglet_('profs'), prow = lignes_('profs'), pi = prow.findIndex(r => adr_(r[0]) === a);
+    const as = onglet_('autorises'), arow = lignes_('autorises'), ai = arow.findIndex(r => adr_(r[0]) === a);
+    if (on) {
+      const nom = ai >= 0 ? String(arow[ai][1] || '') : nomDe_(a).complet;
+      if (pi < 0) ps.appendRow([a, nom, '']);
+      if (ai < 0) as.appendRow([a, nom, '', u.email, new Date(), 'Professeur']);
+    } else {
+      if (pi >= 0) { if (estAdminLigne_(prow[pi])) throw new Error('Un administrateur se retire dans le Google Sheet.'); ps.deleteRow(pi + 2); }
+      if (ai < 0) as.appendRow([a, pi >= 0 ? String(prow[pi][1] || '') : nomDe_(a).complet, '', u.email, new Date(), '']);
+    }
+    marquerDemande_(a, 'Acceptée', u.email);
   });
 }

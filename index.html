@@ -654,7 +654,7 @@ textarea#codeTxt{width:100%;box-sizing:border-box;min-height:180px;font-family:v
     <li>3Q · câblage sur le modèle (bâtiment) : le panneau de la classe avec trois points lumineux en haut, une boîte de dérivation au centre et trois boîtiers en bas (simples ou doubles). Les appareils sont déjà placés : tire les conducteurs, ils passent tout seuls dans les tubes et la boîte de dérivation. Phase brune ou noire, neutre bleu, terre vert-jaune vers la barrette de terre du tableau. Deux lampes en série éclairent moins fort : chacune ne reçoit qu’une partie de la tension.</li>
     <li>Défis : choisis d’abord une catégorie (bâtiment : fiches, 3Q sur le modèle, simulateur du local ; électrotechnique : relais, moteurs, pneumatique, capteurs, LOGO!, recherche de pannes). La dernière catégorie ouverte est retenue ; « ← Catégories » revient au choix.</li>
     <li>Codes : une licence élève débloque tous les défis ; une licence prof ouvre l’application en mode prof à chaque démarrage sur cet appareil (« Verrouiller » repasse en mode élève jusqu’à la prochaine ouverture) ; un code mode prof rend les exemples et les solutions visibles sur l’appareil d’un élève jusqu’à « Verrouiller » ou la fermeture de l’application, sans toucher à sa licence. Ils s’entrent dans « 🔑 Licence » ou dans « Mode prof ».</li>
-    <li>Compte : « Se connecter » avec le compte de l’école ou avec un code reçu par e-mail. Quand le professeur a autorisé l’accès, tous les défis sont débloqués et chaque essai lui est envoyé. Sur un ordinateur partagé, déconnecte-toi à la fin (bouton à ton prénom).</li>
+    <li>Compte : « Se connecter » avec le compte de l’école ou avec un code reçu par e-mail. Quand l’accès est autorisé, tous les défis sont débloqués et chaque essai est envoyé au professeur. Un compte professeur ouvre aussi les solutions. Les codes de licence restent acceptés jusqu’au 31 janvier 2027. Sur un ordinateur partagé, déconnecte-toi à la fin (bouton à ton prénom).</li>
     <li>Licence : sans code, trois défis sont disponibles pour découvrir l’application (simple allumage, relais 1, simulateur libre), et le dessin libre est limité à 10 composants. Le code donné par le professeur (bouton « 🔑 Licence » en bas de cette aide, ou lien d’activation) débloque tous les défis pour l’année scolaire.</li>
     <li>Couleur des fils : brun L/L1, noir L2, gris L3, bleu N. Un court-circuit fait déclencher la protection la plus proche.</li>
   </ul>
@@ -714,13 +714,19 @@ textarea#codeTxt{width:100%;box-sizing:border-box;min-height:180px;font-family:v
   <p class="shotnote">© 2026 Olivier Lesenfants · Tous droits réservés. Logiciel propriétaire, non open source : toute falsification ou tout contournement de la licence est interdit et peut donner lieu à des poursuites.</p>
 </div></div>
 
+<div class="modal" id="mFin" hidden><div class="sheet" role="dialog" aria-label="Fin des codes de licence" style="max-width:460px">
+  <div class="top"><h2>Codes de licence</h2><button class="btn ghost" data-close>Fermer</button></div>
+  <p id="finTxt" style="margin-top:0"></p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="finGo">Se connecter</button><button class="btn ghost" data-close>Plus tard</button></div>
+</div></div>
+
 <div class="modal" id="mCpt" hidden><div class="sheet" role="dialog" aria-label="Mon compte" style="max-width:500px">
   <div class="top"><h2 id="cptH">Se connecter</h2><button class="btn ghost" data-close>Fermer</button></div>
   <div class="cpt" id="cptBody"></div>
 </div></div>
 
 <div class="modal" id="mEl" hidden><div class="sheet" role="dialog" aria-label="Mes élèves" style="max-width:900px">
-  <div class="top"><h2>Mes élèves</h2><div style="display:flex;gap:6px"><button class="btn" id="elRef">Actualiser</button><button class="btn ghost" data-close>Fermer</button></div></div>
+  <div class="top"><h2 id="elTitle">Mes élèves</h2><div style="display:flex;gap:6px"><button class="btn" id="elRef">Actualiser</button><button class="btn ghost" data-close>Fermer</button></div></div>
   <div class="el" id="elBody"><p class="mut">Chargement…</p></div>
 </div></div>
 
@@ -4559,7 +4565,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.20';
+const APP_VERSION = '9.21';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4600,6 +4606,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.21', d:'12 novembre 2026', t:'Administrateur, professeurs, élèves', l:['Trois rôles : l’administrateur gère les comptes, les professeurs voient les solutions et les résultats de leurs classes, les élèves font les défis.', 'Les comptes professeurs ouvrent le mode prof et les solutions automatiquement, sans code de licence.', 'Page « Gestion des comptes » : importer une liste d’élèves (copier-coller ou fichier CSV), autoriser ou refuser les demandes, cocher « solutions » pour un professeur, ajouter une adresse ou un domaine.', 'Les codes de licence restent acceptés jusqu’au 31 janvier 2027 ; ensuite, l’accès se fait uniquement avec un compte autorisé. Un message prévient les appareils qui utilisent encore un code.']},
   {v:'9.20', d:'9 novembre 2026', t:'Comptes élèves et suivi par le professeur', l:['Bouton « Se connecter » : avec le compte Google de l’école (…@elmarche.be) ou avec un code reçu par e-mail, pour n’importe quelle adresse.', 'Le professeur autorise chaque élève (ou tout un domaine). Un compte autorisé débloque tous les défis, sans code de licence ; le nom de l’élève vient de son compte.', 'Chaque essai (défis, fiches, 3Q, simulateur, pupitres) et chaque panne trouvée, avec sa note sur 20, est envoyé au professeur. Sans internet, les essais attendent sur l’appareil.', 'Page « Mes élèves » pour les professeurs : demandes d’accès à accepter ou refuser, classes, exercices réussis, nombre d’essais, notes de recherche de pannes. Tout est aussi dans le Google Sheet.', 'Les codes de licence restent valables, par exemple pour les autres écoles.']},
   {v:'9.19.1', d:'5 novembre 2026', t:'Version d’essai', l:['Sans code de licence, le dessin libre (hors exercices) est limité à 10 composants ; les jonctions ne comptent pas. Les trois défis d’essai ne sont pas limités.']},
   {v:'9.19', d:'5 novembre 2026', t:'Mode libre', l:['Nouveau bouton « Mode libre » à côté de « Filière » : il ouvre une page vierge avec le catalogue complet des composants, toutes filières confondues, pour dessiner et simuler ce qu’on veut.', 'Ouvrir un exercice, un défi ou une recherche de panne, ou choisir une filière, referme le mode libre. On peut aussi toucher à nouveau le bouton.']},
@@ -5048,7 +5055,14 @@ async function licSig(msg){
   for(let i = 0; i < 5; i++){ val = (val << 8) | sig[i]; bits += 8; while(bits >= 5){ out += B32[(val >>> (bits - 5)) & 31]; bits -= 5; } }
   return out;
 }
+// les codes de licence s’arrêtent le 31 janvier 2027 : ensuite, connexion avec un compte autorisé
+const LIC_FIN = new Date(2027, 0, 31, 23, 59, 59);
 async function licCheck(code){
+  const r = await licCheck0(code);
+  if(r && new Date() > LIC_FIN){ r.valid = false; r.fin = true; }
+  return r;
+}
+async function licCheck0(code){
   const p = licParse(code);
   if(!p || !(window.crypto && crypto.subtle)) return null;
   const now = new Date();
@@ -5071,9 +5085,10 @@ async function licCheck(code){
 function licText(){
   if(!SECRET) return 'Version de développement : tout est disponible.';
   const pf = LICS && (LICS.kind === 'prof' || LICS.prof || LEGACY4.has(LICS.id));
-  if(LICS && LICS.valid) return pf ? `Une licence prof est installée sur cet appareil (année scolaire ${LICS.label}). L’application s’ouvre en mode prof.` : `Une licence élève est installée sur cet appareil (année scolaire ${LICS.label}). Tous les défis sont disponibles.`;
+  if(LICS && LICS.fin) return 'Les codes de licence ne sont plus utilisés depuis le 1er février 2027. Connecte-toi avec ton compte (bouton « Se connecter ») : ton professeur autorise ton adresse.';
+  if(LICS && LICS.valid) return 'Les codes de licence s’arrêtent le 31 janvier 2027 : connecte-toi dès maintenant avec ton compte (bouton « Se connecter »). ' + (pf ? `Une licence prof est installée sur cet appareil (année scolaire ${LICS.label}). L’application s’ouvre en mode prof.` : `Une licence élève est installée sur cet appareil (année scolaire ${LICS.label}). Tous les défis sont disponibles.`);
   if(LICS) return `La licence installée (${LICS.label}) ${LICS.early ? 'n’est pas encore valable' : 'a expiré'}. Demande le code de cette année à ton professeur.`;
-  return 'Version d’essai : trois défis sont disponibles (simple allumage, relais 1, simulateur libre). Entre le code de licence donné par ton professeur pour débloquer tous les défis.';
+  return new Date() > LIC_FIN ? 'Version d’essai : trois défis sont disponibles (simple allumage, relais 1, simulateur libre). Connecte-toi avec ton compte (bouton « Se connecter ») pour débloquer tous les défis.' : 'Version d’essai : trois défis sont disponibles (simple allumage, relais 1, simulateur libre). Connecte-toi avec ton compte (bouton « Se connecter ») pour débloquer tous les défis. Les anciens codes de licence restent acceptés jusqu’au 31 janvier 2027.';
 }
 function openLic(){
   $('#licState').textContent = licText(); $('#licMsg').textContent = ''; $('#licIn').value = '';
@@ -5106,7 +5121,7 @@ async function licApply(code, quiet, tryProf){
   renderExList(); renderConsigne();
   if(!quiet){
     if(r.valid){ $('#mLic').hidden = true; flash(r.prof ? `Licence prof activée (${r.label}) : l’application s’ouvre en mode prof.` : `Licence activée (${r.label}) : tous les défis sont disponibles.`); }
-    else { $('#licState').textContent = licText(); $('#licMsg').textContent = r.early ? 'Ce code est valable à partir du 1er août ' + r.label.slice(0, 4) + '.' : 'Ce code a expiré.'; }
+    else { $('#licState').textContent = licText(); $('#licMsg').textContent = r.fin ? 'Les codes de licence ne sont plus acceptés depuis le 1er février 2027 : connecte-toi avec ton compte.' : r.early ? 'Ce code est valable à partir du 1er août ' + r.label.slice(0, 4) + '.' : 'Ce code a expiré.'; }
   }
   return r.valid;
 }
@@ -5145,7 +5160,8 @@ var CPT = {loginUrl: 'https://script.google.com/a/macros/elmarche.be/s/AKfycbxK5
 var CPTKEY = 'banc-cablage-compte', OUTKEY = 'banc-cablage-envois:', SEENKEY = 'banc-cablage-vus';
 var ACC = null, ACCPROF = false, accT = null, accBusy = false, cptStep = null;
 function cptOn(){ return !!(CPT && CPT.apiUrl && CPT.loginUrl); }
-function accOK(){ return !!(ACC && (ACC.statut === 'ok' || ACC.role === 'prof')); }
+function accProf(){ return !!(ACC && (ACC.role === 'prof' || ACC.role === 'admin')); }
+function accOK(){ return !!(ACC && (ACC.statut === 'ok' || accProf())); }
 function accLoad(){ try{ const a = JSON.parse(localStorage.getItem(CPTKEY) || 'null'); return a && a.cle ? a : null; }catch(e){ return null; } }
 function accSave(){ lsSet(CPTKEY, ACC ? JSON.stringify(ACC) : null); }
 async function accApi(a, q){
@@ -5165,24 +5181,20 @@ async function accRefresh(first){
   if(!ACC) return;
   try{
     const m = await accApi('moi');
-    Object.assign(ACC, {email:m.email, role:m.role, statut:m.statut, classe:m.classe || '', nom:m.nom || '', prenom:m.prenom || '', complet:m.complet || '', classes:m.classes || [], codeProf:m.codeProf || ''});
+    Object.assign(ACC, {email:m.email, role:m.role, statut:m.statut, classe:m.classe || '', nom:m.nom || '', prenom:m.prenom || '', complet:m.complet || '', classes:m.classes || [], cleProf:m.cleProf || ''});
     accSave();
   }catch(e){
     if(e.auth){ ACC = null; accSave(); accUI(); flash(e.message); return; }
     if(first) throw e;
   }
   accUI();
-  if(ACC.role === 'prof' && ACC.codeProf && !ACCPROF && EDITION !== 'prof'){ ACCPROF = true; try{ if(await licApply(ACC.codeProf, true, true)) lsSet('banc-cablage-licacc', '1'); }catch(e){} }
+  // compte professeur : les solutions s’ouvrent avec la clé du mode prof, sans licence
+  if(accProf() && ACC.cleProf && EDITION !== 'prof'){ try{ await unlock(ACC.cleProf); ACCPROF = true; }catch(e){} }
   accFlush();
 }
 function accLogout(){
-  ACC = null; accSave(); ACCPROF = false;
-  if(lsGet('banc-cablage-licacc')){
-    // licence prof installée par le compte : on la retire avec la déconnexion
-    lsSet('banc-cablage-licacc', null);
-    if(LICS && licTracked(LICS)) licSrv({a:'rel', code:LICS.code, dev:devId()});
-    lsSet(LICKEY, null); lsSet(LCHK, null); location.reload(); return;
-  }
+  ACC = null; accSave();
+  if(ACCPROF){ ACCPROF = false; if(EDITION === 'prof') lock(); }
   accUI(); flash('Tu es déconnecté sur cet appareil.');
 }
 function accUI(){
@@ -5285,14 +5297,14 @@ function cptRender(){
   }
   $('#cptH').textContent = 'Mon compte';
   const out = accOut().length, cl = ACC.classes || [];
-  const st = ACC.role === 'prof' ? '<div class="st ok">Compte professeur : tous les défis sont débloqués.</div>'
+  const st = accProf() ? `<div class="st ok">${ACC.role === 'admin' ? 'Compte administrateur' : 'Compte professeur'} : tous les défis sont débloqués${EDITION === 'prof' ? ', solutions comprises' : ''}.${ACC.cleProf ? '' : ' Les solutions s’ouvriront quand la clé du mode prof sera réglée dans le script.'}</div>`
     : ACC.statut === 'ok' ? `<div class="st ok">Accès autorisé${ACC.classe ? ' · classe ' + esc(ACC.classe) : ''} : tous les défis sont débloqués et tes exercices sont suivis par ton professeur.</div>`
     : ACC.statut === 'refuse' ? '<div class="st">Ton accès a été refusé. Parles-en à ton professeur. La version d’essai reste disponible.</div>'
     : `<div class="st">Ta demande d’accès est envoyée : ton professeur doit l’accepter. En attendant, la version d’essai reste disponible.</div>
        ${cl.length ? `<form class="row" id="cptCl"><label style="font-size:14px">Ma classe <select id="cptClasse"><option value="">Choisir…</option>${cl.map(c => `<option${c === ACC.classe ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></label><button class="btn" type="submit">Envoyer</button></form>` : ''}`;
   B.innerHTML = `<p style="margin:0"><b>${esc(ACC.complet || ACC.email)}</b><br><span class="mut">${esc(ACC.email || '')}</span></p>${st}
-    ${ACC.role !== 'prof' ? `<p class="mut" style="margin:0;font-size:13.5px">${out ? `${out} essai${out > 1 ? 's' : ''} en attente d’envoi${navigator.onLine === false ? ' (pas d’internet)' : ''}.` : 'Tous tes essais sont envoyés.'}</p>` : ''}
-    <div class="row">${ACC.role === 'prof' ? '<button class="btn primary" id="cptEl">Mes élèves</button>' : ''}<button class="btn" id="cptRef">Actualiser</button><button class="btn ghost" id="cptOut">Se déconnecter</button></div>
+    ${!accProf() ? `<p class="mut" style="margin:0;font-size:13.5px">${out ? `${out} essai${out > 1 ? 's' : ''} en attente d’envoi${navigator.onLine === false ? ' (pas d’internet)' : ''}.` : 'Tous tes essais sont envoyés.'}</p>` : ''}
+    <div class="row">${accProf() ? `<button class="btn primary" id="cptEl">${ACC.role === 'admin' ? 'Gestion des comptes' : 'Mes élèves'}</button>` : ''}<button class="btn" id="cptRef">Actualiser</button><button class="btn ghost" id="cptOut">Se déconnecter</button></div>
     <div class="msg" id="cptMsg"></div>
     <p class="mut" style="margin:0;font-size:12.5px">Sur un ordinateur partagé, pense à te déconnecter à la fin.</p>`;
   $('#cptRef').onclick = async () => { cptMsg('Actualisation…'); try{ await accRefresh(true); cptMsg(''); }catch(e){ cptMsg(e.message, true); } };
@@ -5304,80 +5316,117 @@ function cptRender(){
 function cptMsg(t, ko){ const m = $('#cptMsg'); if(m){ m.textContent = t || ''; m.classList.toggle('ko', !!ko); } }
 function accWelcome(){
   if(!ACC) return;
-  $('#mCpt').hidden = !ACC || ACC.role === 'prof' || ACC.statut === 'ok' ? true : false;
+  $('#mCpt').hidden = !ACC || accProf() || ACC.statut === 'ok' ? true : false;
   if(!$('#mCpt').hidden) cptRender();
-  flash(ACC.role === 'prof' ? `Connecté : ${ACC.complet || ACC.email} (professeur).` : ACC.statut === 'ok' ? `Connecté : ${ACC.complet || ACC.email}. Tous les défis sont débloqués.` : `Connecté : ${ACC.complet || ACC.email}. Ton professeur doit encore autoriser ton accès.`);
+  flash(accProf() ? `Connecté : ${ACC.complet || ACC.email} (${ACC.role === 'admin' ? 'administrateur' : 'professeur'}).` : ACC.statut === 'ok' ? `Connecté : ${ACC.complet || ACC.email}. Tous les défis sont débloqués.` : `Connecté : ${ACC.complet || ACC.email}. Ton professeur doit encore autoriser ton accès.`);
 }
 
-/* page « Mes élèves » (professeurs) */
-var EL = null, ELF = {cl:'', q:'', open:''};
-function openEl(){ $('#mEl').hidden = false; elLoad(); }
+/* page « Gestion » (administrateur) et « Mes élèves » (professeurs) */
+var EL = null, ELF = {cl:'', q:'', open:''}, ELIMP = null;
+function openEl(){ $('#elTitle').textContent = ACC && ACC.role === 'admin' ? 'Gestion des comptes' : 'Mes élèves'; $('#mEl').hidden = false; elLoad(); }
 async function elLoad(act, q){
   const B = $('#elBody');
   if(!EL) B.innerHTML = '<p class="mut">Chargement…</p>';
   try{
     EL = await accApi(act || 'profDonnees', q);
-    if(!act && ELF.cl === '' && EL.mesClasses && EL.mesClasses.length) ELF.cl = 'mes';
+    if(!act && ELF.cl === '' && EL.mesClasses && EL.mesClasses.length && !EL.admin) ELF.cl = 'mes';
     elRender();
-  }catch(e){ if(EL){ elRender(); const m = $('#elMsg'); if(m){ m.textContent = e.message; m.className = 'ko'; } } else B.innerHTML = `<p class="ko">${esc(e.message)}</p>`; }
+    if(act === 'adminImporter'){ ELIMP = null; elRender(); elMsg('Liste importée : ces élèves sont autorisés.'); }
+  }catch(e){ if(EL){ elRender(); elMsg(e.message, true); } else B.innerHTML = `<p class="ko">${esc(e.message)}</p>`; }
 }
+function elMsg(t, ko){ const m = $('#elMsg'); if(m){ m.textContent = t; m.className = ko ? 'ko' : 'ok'; } }
 const elDate = ms => ms ? new Date(ms).toLocaleDateString('fr-BE', {day:'2-digit', month:'2-digit'}) + ' ' + new Date(ms).toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'}) : '';
+/* lecture d'une liste collée ou d'un fichier CSV : une adresse par ligne, avec éventuellement nom, prénom et classe */
+function elParse(txt, classes){
+  const out = new Map(), cls = (classes || []).map(c => [c.toLowerCase(), c]);
+  String(txt || '').split(/\r?\n/).forEach(line => {
+    const mails = line.match(/[^\s@<>()",;:]+@[a-z0-9.-]+\.[a-z]{2,}/gi); if(!mails) return;
+    const rest = line.replace(/[^\s@<>()",;:]+@[a-z0-9.-]+\.[a-z]{2,}/gi, ' ').split(/[;,\t]+/).map(x => x.replace(/["<>]/g, '').trim()).filter(Boolean);
+    let classe = '';
+    const ci = rest.findIndex(x => cls.some(([l]) => l === x.toLowerCase())); if(ci >= 0){ classe = cls.find(([l]) => l === rest[ci].toLowerCase())[1]; rest.splice(ci, 1); }
+    const nom = mails.length === 1 ? rest.join(' ').replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+    mails.forEach(m => { const a = m.toLowerCase(); if(!out.has(a)) out.set(a, {adresse:a, nom, classe}); });
+  });
+  return [...out.values()];
+}
 function elRender(){
-  const D = EL, B = $('#elBody'), cls = D.classes || [];
+  const D = EL, B = $('#elBody'), cls = D.classes || [], adm = !!D.admin;
   const opt = (sel, none) => `<option value="">${none}</option>` + cls.map(c => `<option${c === sel ? ' selected' : ''}>${esc(c)}</option>`).join('');
   const pend = D.demandes.filter(d => !/refus/i.test(d.statut)), refused = D.demandes.filter(d => /refus/i.test(d.statut));
-  // élèves : adresses autorisées une par une + adresses vues dans les résultats (accès par domaine)
+  const profs = new Map((D.profs || []).map(p => [p.adresse, p]));
+  // comptes : adresses autorisées une par une, professeurs, et adresses vues dans les résultats (accès par domaine)
   const stu = new Map();
   D.autorises.filter(a => a.adresse[0] !== '@').forEach(a => stu.set(a.adresse, {adresse:a.adresse, nom:a.nom, classe:a.classe, res:[]}));
+  (D.profs || []).forEach(p => { if(!stu.has(p.adresse)) stu.set(p.adresse, {adresse:p.adresse, nom:p.nom, classe:'', res:[]}); });
   D.resultats.forEach(r => { if(!stu.has(r.adresse)) stu.set(r.adresse, {adresse:r.adresse, nom:r.nom, classe:r.classe, res:[], dom:true}); const s = stu.get(r.adresse); s.res.push(r); if(!s.nom) s.nom = r.nom; if(!s.classe) s.classe = r.classe; });
+  stu.forEach(s => { const p = profs.get(s.adresse); s.prof = !!p; s.admin = !!(p && p.admin); });
   const mine = new Set(D.mesClasses || []);
-  let list = [...stu.values()].filter(s => ELF.cl === 'mes' ? mine.has(s.classe) : ELF.cl ? s.classe === ELF.cl : true);
+  let list = [...stu.values()].filter(s => ELF.cl === 'mes' ? mine.has(s.classe) : ELF.cl === 'profs' ? s.prof : ELF.cl ? s.classe === ELF.cl : true);
+  if(!adm) list = list.filter(s => !s.prof);
   const q = ELF.q.trim().toLowerCase(); if(q) list = list.filter(s => (s.nom + ' ' + s.adresse).toLowerCase().includes(q));
-  list.sort((a, b) => (a.classe || '~').localeCompare(b.classe || '~') || (a.nom || a.adresse).localeCompare(b.nom || b.adresse));
+  list.sort((a, b) => (b.admin - a.admin) || (b.prof - a.prof) || (a.classe || '~').localeCompare(b.classe || '~') || (a.nom || a.adresse).localeCompare(b.nom || b.adresse));
   const doms = D.autorises.filter(a => a.adresse[0] === '@');
   let h = `<div id="elMsg"></div>`;
-  h += `<section><h3>Demandes d’accès (${pend.length})</h3>` + (pend.length ? `<div class="scroll"><table><tr><th>Élève</th><th class="hide-s">Demandé le</th><th>Classe</th><th></th></tr>` +
-    pend.map(d => `<tr data-a="${esc(d.adresse)}"><td><b>${esc(d.nom || d.adresse)}</b><br><span class="mut">${esc(d.adresse)}</span>${d.verifiee ? '' : '<span class="tag" title="L’adresse n’a pas encore été confirmée (code ou compte Google)">non vérifiée</span>'}${/retir/i.test(d.statut) ? '<span class="tag">accès retiré</span>' : ''}</td>
-      <td class="hide-s">${elDate(d.le)}</td><td><select class="elCl">${opt(d.classe, 'Classe…')}</select></td>
-      <td><div class="row"><button class="btn primary" data-ok="1">Autoriser</button><button class="btn ghost" data-no="1">Refuser</button></div></td></tr>`).join('') + `</table></div>`
-    : '<p class="mut" style="margin:4px 0 0">Aucune demande en attente.</p>') + (refused.length ? `<details style="margin-top:6px"><summary class="mut">Demandes refusées (${refused.length})</summary><table>${refused.map(d => `<tr data-a="${esc(d.adresse)}"><td>${esc(d.nom || d.adresse)} <span class="mut">${esc(d.adresse)}</span></td><td><select class="elCl">${opt(d.classe, 'Classe…')}</select></td><td><button class="btn" data-ok="1">Autoriser</button></td></tr>`).join('')}</table></details>` : '') + `</section>`;
-  h += `<section><h3>Élèves (${list.length})</h3><div class="row" style="margin:6px 0"><select id="elFcl"><option value="">Toutes les classes</option>${mine.size ? `<option value="mes"${ELF.cl === 'mes' ? ' selected' : ''}>Mes classes</option>` : ''}${cls.map(c => `<option${c === ELF.cl ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select><input id="elQ" placeholder="Rechercher un élève" value="${esc(ELF.q)}" style="flex:1;min-width:10em"></div>`;
-  h += list.length ? `<div class="scroll"><table><tr><th>Élève</th><th>Classe</th><th>Réussis</th><th class="hide-s">Essais</th><th class="hide-s">Pannes</th><th class="hide-s">Dernière activité</th></tr>` + list.map(s => {
+  if(adm){
+    h += `<section><h3>Demandes d’accès (${pend.length})</h3>` + (pend.length ? `<div class="scroll"><table><tr><th>Personne</th><th class="hide-s">Demandé le</th><th>Classe</th><th></th></tr>` +
+      pend.map(d => `<tr data-a="${esc(d.adresse)}"><td><b>${esc(d.nom || d.adresse)}</b><br><span class="mut">${esc(d.adresse)}</span>${d.verifiee ? '' : '<span class="tag" title="L’adresse n’a pas encore été confirmée (compte Google ou code par e-mail)">non vérifiée</span>'}${/retir/i.test(d.statut) ? '<span class="tag">accès retiré</span>' : ''}</td>
+        <td class="hide-s">${elDate(d.le)}</td><td><select class="elCl">${opt(d.classe, 'Classe…')}</select></td>
+        <td><div class="row"><button class="btn primary" data-ok="1">Autoriser</button><button class="btn ghost" data-no="1">Refuser</button></div></td></tr>`).join('') + `</table></div>`
+      : '<p class="mut" style="margin:4px 0 0">Aucune demande en attente.</p>') + (refused.length ? `<details style="margin-top:6px"><summary class="mut">Demandes refusées (${refused.length})</summary><table>${refused.map(d => `<tr data-a="${esc(d.adresse)}"><td>${esc(d.nom || d.adresse)} <span class="mut">${esc(d.adresse)}</span></td><td><select class="elCl">${opt(d.classe, 'Classe…')}</select></td><td><button class="btn" data-ok="1">Autoriser</button></td></tr>`).join('')}</table></details>` : '') + `</section>`;
+    h += `<section><h3>Importer une liste d’élèves</h3><p class="mut" style="margin:2px 0 6px">Colle les adresses (une par ligne, avec le nom et la classe si tu les as), ou choisis un fichier CSV exporté de Classroom ou d’Excel. Ces élèves sont autorisés d’office : plus de demande à valider.</p>
+      <textarea id="elImpTxt" rows="4" placeholder="prenom.nom.student@elmarche.be;Nom Prénom;3P Élec" style="width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:8px;padding:8px;font:14px var(--font-mono);background:var(--surface);color:var(--ink)">${esc(ELIMP ? ELIMP.txt : '')}</textarea>
+      <div class="row" style="margin-top:6px"><label class="btn" style="cursor:pointer">Fichier CSV…<input type="file" id="elImpFile" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden></label><label style="font-size:14px">Classe pour toute la liste <select id="elImpCl">${opt(ELIMP ? ELIMP.cl : '', '(celle de chaque ligne)')}</select></label><button class="btn" id="elImpPrev">Vérifier la liste</button></div>
+      ${ELIMP && ELIMP.rows ? `<p style="margin:8px 0 4px"><b>${ELIMP.rows.length}</b> adresse${ELIMP.rows.length > 1 ? 's' : ''} trouvée${ELIMP.rows.length > 1 ? 's' : ''}${ELIMP.rows.length ? ` : ${esc(ELIMP.rows.slice(0, 4).map(r => r.nom || r.adresse).join(', '))}${ELIMP.rows.length > 4 ? '…' : ''}` : ''}.</p>${ELIMP.rows.length ? '<button class="btn primary" id="elImpGo">Autoriser ces élèves</button>' : ''}` : ''}</section>`;
+  }
+  h += `<section><h3>${adm ? 'Comptes' : 'Élèves'} (${list.length})</h3><div class="row" style="margin:6px 0"><select id="elFcl"><option value="">${adm ? 'Tous les comptes' : 'Toutes les classes'}</option>${adm ? `<option value="profs"${ELF.cl === 'profs' ? ' selected' : ''}>Professeurs</option>` : ''}${mine.size ? `<option value="mes"${ELF.cl === 'mes' ? ' selected' : ''}>Mes classes</option>` : ''}${cls.map(c => `<option${c === ELF.cl ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select><input id="elQ" placeholder="Rechercher" value="${esc(ELF.q)}" style="flex:1;min-width:10em"></div>`;
+  h += list.length ? `<div class="scroll"><table><tr><th>Compte</th><th>Classe</th>${adm ? '<th title="Coché : le compte est professeur et voit les solutions">Solutions</th>' : ''}<th>Réussis</th><th class="hide-s">Essais</th><th class="hide-s">Pannes</th><th class="hide-s">Dernière activité</th></tr>` + list.map(s => {
       const ex = s.res.filter(r => r.type !== 'panne'), pn = s.res.filter(r => r.type === 'panne');
       const ok = ex.filter(r => r.reussi).length, ess = ex.reduce((a, r) => a + r.essais, 0), last = Math.max(0, ...s.res.map(r => r.dernier));
       const notes = pn.filter(r => r.note != null).map(r => r.note), moy = notes.length ? Math.round(notes.reduce((a, b) => a + b, 0) / notes.length * 2) / 2 : null;
-      const op = ELF.open === s.adresse;
-      let row = `<tr class="stu" data-s="${esc(s.adresse)}"><td><b>${esc(s.nom || s.adresse)}</b>${s.dom ? '<span class="tag" title="Autorisé par son domaine">domaine</span>' : ''}<br><span class="mut">${esc(s.adresse)}</span></td><td>${esc(s.classe || '—')}</td>
+      const op = ELF.open === s.adresse, cols = adm ? 7 : 6;
+      let row = `<tr class="stu" data-s="${esc(s.adresse)}" data-a="${esc(s.adresse)}"><td><b>${esc(s.nom || s.adresse)}</b>${s.admin ? '<span class="tag">administrateur</span>' : s.prof ? '<span class="tag">professeur</span>' : ''}${s.dom ? '<span class="tag" title="Autorisé par son domaine">domaine</span>' : ''}<br><span class="mut">${esc(s.adresse)}</span></td><td>${esc(s.classe || '—')}</td>
+        ${adm ? `<td><input type="checkbox" class="elSol"${s.prof ? ' checked' : ''}${s.admin || s.dom ? ' disabled' : ''} aria-label="Voit les solutions" style="width:20px;height:20px"></td>` : ''}
         <td>${ok} / ${ex.length}</td><td class="hide-s">${ess}</td><td class="hide-s">${pn.length ? pn.reduce((a, r) => a + r.essais, 0) + (moy != null ? ` · moy. ${String(moy).replace('.', ',')}/20` : '') : '—'}</td><td class="hide-s">${elDate(last) || '—'}</td></tr>`;
       if(op){
         const rs = s.res.slice().sort((a, b) => b.dernier - a.dernier);
-        row += `<tr class="det" data-a="${esc(s.adresse)}"><td colspan="6">${rs.length ? `<ul>${rs.map(r => `<li><b>${esc(r.titre)}</b> <span class="mut">(${esc(r.type)})</span> : ` +
+        row += `<tr class="det" data-a="${esc(s.adresse)}"><td colspan="${cols}">${rs.length ? `<ul>${rs.map(r => `<li><b>${esc(r.titre)}</b> <span class="mut">(${esc(r.type)})</span> : ` +
             (r.type === 'panne' ? `${r.essais} panne${r.essais > 1 ? 's' : ''} trouvée${r.essais > 1 ? 's' : ''}${r.note != null ? `, meilleure note <b>${String(r.note).replace('.', ',')}/20</b>` : ''}`
               : r.reussi ? `<span class="ok">réussi</span> au ${nth(r.n)} essai (${elDate(r.reussiLe)})${r.essais > r.n ? `, ${r.essais} essais en tout` : ''}` : `${r.essais} essai${r.essais > 1 ? 's' : ''}, pas encore réussi`) +
             ` <span class="mut">· ${elDate(r.dernier)}</span></li>`).join('')}</ul>` : '<p class="mut">Aucun exercice enregistré pour l’instant.</p>'}
-          ${s.dom ? '' : `<div class="row"><label style="font-size:14px">Classe <select class="elCl">${opt(s.classe, '—')}</select></label><button class="btn" data-cl="1">Changer</button><button class="btn ghost" data-del="1">Retirer l’accès</button></div>`}</td></tr>`;
+          ${adm && !s.dom && !s.admin ? `<div class="row"><label style="font-size:14px">Classe <select class="elCl">${opt(s.classe, '—')}</select></label><button class="btn" data-cl="1">Changer</button><button class="btn ghost" data-del="1">Retirer l’accès</button></div>` : ''}</td></tr>`;
       }
       return row;
-    }).join('') + `</table></div>` : '<p class="mut">Aucun élève' + (ELF.cl || q ? ' pour ce filtre' : ' autorisé pour l’instant') + '.</p>';
+    }).join('') + `</table></div>` : '<p class="mut">Aucun compte' + (ELF.cl || q ? ' pour ce filtre' : ' pour l’instant') + '.</p>';
   h += `</section>`;
-  h += `<section><h3>Ajouter un accès</h3><p class="mut" style="margin:2px 0 6px">Une adresse (élève, collègue d’une autre école…) ou tout un domaine, par exemple <b>@ecole.be</b>.</p>
-    <form class="row" id="elAdd"><input id="elAdr" placeholder="adresse@ecole.be ou @domaine.be" style="flex:2;min-width:14em"><input id="elNom" placeholder="Nom Prénom (facultatif)" style="flex:1;min-width:10em"><select id="elAddCl">${opt('', 'Classe…')}</select><button class="btn primary" type="submit">Ajouter</button></form>
-    ${doms.length ? `<p class="mut" style="margin:8px 0 2px">Domaines autorisés :</p><table>${doms.map(a => `<tr data-a="${esc(a.adresse)}"><td><b>${esc(a.adresse)}</b> ${a.classe ? '· ' + esc(a.classe) : ''}</td><td><button class="btn ghost" data-del="1">Retirer</button></td></tr>`).join('')}</table>` : ''}</section>
-    <p class="mut">Tout est aussi dans le Google Sheet « Banc de câblage – données » (onglets Résultats et Journal).</p>`;
+  if(adm) h += `<section><h3>Ajouter un accès</h3><p class="mut" style="margin:2px 0 6px">Une adresse (élève, collègue, prof d’une autre école) ou tout un domaine, par exemple <b>@ecole.be</b>. Coche « solutions » pour un professeur.</p>
+    <form class="row" id="elAdd"><input id="elAdr" placeholder="adresse@ecole.be ou @domaine.be" style="flex:2;min-width:14em"><input id="elNom" placeholder="Nom Prénom (facultatif)" style="flex:1;min-width:10em"><select id="elAddCl">${opt('', 'Classe…')}</select><label style="font-size:14px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="elAddSol"> solutions</label><button class="btn primary" type="submit">Ajouter</button></form>
+    ${doms.length ? `<p class="mut" style="margin:8px 0 2px">Domaines autorisés (élèves) :</p><table>${doms.map(a => `<tr data-a="${esc(a.adresse)}"><td><b>${esc(a.adresse)}</b> ${a.classe ? '· ' + esc(a.classe) : ''}</td><td><button class="btn ghost" data-del="1">Retirer</button></td></tr>`).join('')}</table>` : ''}</section>`;
+  h += `<p class="mut">Tout est aussi dans le Google Sheet « Banc de câblage – données » (onglets Autorisés, Profs, Résultats et Journal).</p>`;
   B.innerHTML = h;
   $('#elFcl').onchange = e => { ELF.cl = e.target.value; elRender(); };
   $('#elQ').oninput = e => { ELF.q = e.target.value; clearTimeout(elRender.t); elRender.t = setTimeout(() => { elRender(); const i = $('#elQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 300); };
-  B.querySelectorAll('tr.stu').forEach(tr => tr.onclick = () => { ELF.open = ELF.open === tr.dataset.s ? '' : tr.dataset.s; elRender(); });
+  B.querySelectorAll('tr.stu').forEach(tr => tr.onclick = e => { if(e.target.closest('input')) return; ELF.open = ELF.open === tr.dataset.s ? '' : tr.dataset.s; elRender(); });
+  if(!adm) return;
   const row = b => b.closest('tr[data-a]'), clOf = tr => { const s = tr.querySelector('.elCl'); return s ? s.value : ''; };
+  B.querySelectorAll('.elSol').forEach(c => c.onchange = () => elLoad('adminSolutions', {adresse: row(c).dataset.a, on: c.checked}));
   B.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { const tr = row(b); elLoad('profAutoriser', {adresse: tr.dataset.a, classe: clOf(tr)}); });
   B.querySelectorAll('[data-no]').forEach(b => b.onclick = () => elLoad('profRefuser', {adresse: row(b).dataset.a}));
-  B.querySelectorAll('[data-cl]').forEach(b => b.onclick = () => { const tr = row(b); elLoad('profClasse', {adresse: tr.dataset.a, classe: clOf(tr)}); });
+  B.querySelectorAll('[data-cl]').forEach(b => b.onclick = () => { const tr = b.closest('tr.det'); elLoad('profClasse', {adresse: tr.dataset.a, classe: clOf(tr)}); });
   B.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
     const a = row(b).dataset.a;
     if(b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Confirmer ?'; b.classList.add('primary'); setTimeout(() => { if(b.isConnected){ b.dataset.armed = ''; b.textContent = a[0] === '@' ? 'Retirer' : 'Retirer l’accès'; b.classList.remove('primary'); } }, 3000); return; }
     elLoad('profRetirer', {adresse: a});
   });
-  $('#elAdd').onsubmit = e => { e.preventDefault(); const a = $('#elAdr').value.trim(); if(!a) return; elLoad('profAutoriser', {adresse: a, nom: $('#elNom').value.trim(), classe: $('#elAddCl').value}); };
+  $('#elAdd').onsubmit = async e => {
+    e.preventDefault(); const a = $('#elAdr').value.trim(); if(!a) return;
+    const sol = $('#elAddSol').checked;
+    await elLoad('profAutoriser', {adresse: a, nom: $('#elNom').value.trim(), classe: $('#elAddCl').value});
+    if(sol && a[0] !== '@') elLoad('adminSolutions', {adresse: a, on: true});
+  };
+  const prev = () => { ELIMP = {txt: $('#elImpTxt').value, cl: $('#elImpCl').value}; ELIMP.rows = elParse(ELIMP.txt, cls); elRender(); };
+  $('#elImpPrev').onclick = prev;
+  $('#elImpFile').onchange = e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { $('#elImpTxt').value = String(r.result || ''); prev(); }; r.readAsText(f); };
+  const go = $('#elImpGo'); if(go) go.onclick = () => elLoad('adminImporter', {lignes: ELIMP.rows.map(r => Object.assign({}, r, {classe: ELIMP.cl || r.classe})), classe: ELIMP.cl});
 }
 
 /* démarrage du compte */
@@ -5402,6 +5451,17 @@ function elRender(){
   window.addEventListener('online', () => { if(ACC) accRefresh(false); });
   document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'hidden') accFlush(); });
   setInterval(() => { if(ACC && accOut().length) accFlush(); }, 60000);
+  // annonce de la fin des codes de licence, une fois par session, pour qui utilise encore un code sans compte
+  $('#finGo').onclick = () => { $('#mFin').hidden = true; openCpt(); };
+  setTimeout(() => {
+    if(!cptOn() || ACC || !LICS || wsGet('banc-cablage-fin')) return;
+    if(!LICS.valid && !LICS.fin) return;
+    wsSet('banc-cablage-fin', '1');
+    $('#finTxt').textContent = LICS.fin
+      ? 'Les codes de licence ne sont plus utilisés depuis le 1er février 2027. Connecte-toi avec ton compte : ton professeur autorise ton adresse, et tu retrouves tous les défis.'
+      : 'Le code de licence installé sur cet appareil s’arrêtera le 31 janvier 2027. Connecte-toi dès maintenant avec ton compte (adresse de l’école) : ton professeur suit tes exercices, et tu gardes l’accès après le 31 janvier.';
+    $('#mFin').hidden = false;
+  }, 2500);
 })();
 
 /* ---------- notes de théorie (une par notion, reliées aux exercices) ---------- */
