@@ -130,6 +130,8 @@ const ACTIONS = {
   adminProfs: (u) => (admin_(u), listeProfsAdmin_()),
   adminProfAjouter: (u, q) => (admin_(u), profAjouter_(String(q.adresse || ''), String(q.nom || '')), listeProfsAdmin_()),
   adminProfRetirer: (u, q) => (admin_(u), profRetirer_(u, String(q.adresse || '')), listeProfsAdmin_()),
+  adminClasse: (u, q) => (admin_(u), classeEnregistrer_(String(q.classe || ''), String(q.prof || ''), String(q.ancien || '')), profDonnees_(u)),
+  adminClasseRetirer: (u, q) => (admin_(u), classeRetirer_(String(q.classe || '')), profDonnees_(u)),
   adminImporter: (u, q) => (admin_(u), importer_(u, Array.isArray(q.lignes) ? q.lignes : [], String(q.classe || '')), profDonnees_(u)),
   adminSolutions: (u, q) => (admin_(u), solutions_(u, String(q.adresse || ''), !!q.on), profDonnees_(u)),
 };
@@ -301,6 +303,7 @@ function profDonnees_(u) {
     essais: Number(r[7]) || 0, reussi: r[8] === true, n: Number(r[9]) || 0, premier: dateMs_(r[10]), reussiLe: dateMs_(r[11]), dernier: dateMs_(r[12]), note: r[13] === '' ? null : Number(r[13]) }));
   const out = { moi: u.email, admin: u.role === 'admin', classes: classes.map(c => c.classe), mesClasses, autorises: aut, demandes: dem, resultats: res };
   out.profs = listeProfsAdmin_();
+  out.classesDet = classes;
   if (u.role !== 'admin') { out.demandes = []; }
   return out;
 }
@@ -405,5 +408,31 @@ function solutions_(u, brut, on) {
       if (ai < 0) as.appendRow([a, pi >= 0 ? String(prow[pi][1] || '') : nomDe_(a).complet, '', u.email, new Date(), '']);
     }
     marquerDemande_(a, 'Acceptée', u.email);
+  });
+}
+
+/* =========================================================
+   Administrateur : classes
+   ========================================================= */
+function classeEnregistrer_(nom, prof, ancien) {
+  nom = String(nom || '').trim().slice(0, 40); prof = adr_(prof); ancien = String(ancien || '').trim();
+  if (!nom) throw new Error('Indique le nom de la classe.');
+  verrou_(() => {
+    const sh = onglet_('classes'), rows = lignes_('classes');
+    const i = rows.findIndex(r => String(r[0]).trim() === (ancien || nom));
+    if (ancien && ancien !== nom && rows.some(r => String(r[0]).trim() === nom)) throw new Error('Cette classe existe déjà.');
+    if (i < 0) sh.appendRow([nom, prof, '']);
+    else sh.getRange(i + 2, 1, 1, 2).setValues([[nom, prof || String(rows[i][1] || '')]]);
+    if (ancien && ancien !== nom) {
+      // la classe change de nom : les élèves et les demandes suivent
+      ['autorises', 'demandes'].forEach(k => { const o = onglet_(k); lignes_(k).forEach((r, j) => { if (String(r[2]).trim() === ancien) o.getRange(j + 2, 3).setValue(nom); }); });
+    }
+  });
+}
+function classeRetirer_(nom) {
+  nom = String(nom || '').trim();
+  verrou_(() => {
+    const sh = onglet_('classes'), rows = lignes_('classes');
+    for (let i = rows.length - 1; i >= 0; i--) if (String(rows[i][0]).trim() === nom) sh.deleteRow(i + 2);
   });
 }

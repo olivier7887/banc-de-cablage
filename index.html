@@ -4565,7 +4565,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.21';
+const APP_VERSION = '9.21.1';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4606,6 +4606,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.21.1', d:'12 novembre 2026', t:'Classes', l:['Gestion des comptes : ajouter, renommer ou supprimer une classe et choisir son professeur. Quand une classe change de nom, ses élèves suivent.']},
   {v:'9.21', d:'12 novembre 2026', t:'Administrateur, professeurs, élèves', l:['Trois rôles : l’administrateur gère les comptes, les professeurs voient les solutions et les résultats de leurs classes, les élèves font les défis.', 'Les comptes professeurs ouvrent le mode prof et les solutions automatiquement, sans code de licence.', 'Page « Gestion des comptes » : importer une liste d’élèves (copier-coller ou fichier CSV), autoriser ou refuser les demandes, cocher « solutions » pour un professeur, ajouter une adresse ou un domaine.', 'Les codes de licence restent acceptés jusqu’au 31 janvier 2027 ; ensuite, l’accès se fait uniquement avec un compte autorisé. Un message prévient les appareils qui utilisent encore un code.']},
   {v:'9.20', d:'9 novembre 2026', t:'Comptes élèves et suivi par le professeur', l:['Bouton « Se connecter » : avec le compte Google de l’école (…@elmarche.be) ou avec un code reçu par e-mail, pour n’importe quelle adresse.', 'Le professeur autorise chaque élève (ou tout un domaine). Un compte autorisé débloque tous les défis, sans code de licence ; le nom de l’élève vient de son compte.', 'Chaque essai (défis, fiches, 3Q, simulateur, pupitres) et chaque panne trouvée, avec sa note sur 20, est envoyé au professeur. Sans internet, les essais attendent sur l’appareil.', 'Page « Mes élèves » pour les professeurs : demandes d’accès à accepter ou refuser, classes, exercices réussis, nombre d’essais, notes de recherche de pannes. Tout est aussi dans le Google Sheet.', 'Les codes de licence restent valables, par exemple pour les autres écoles.']},
   {v:'9.19.1', d:'5 novembre 2026', t:'Version d’essai', l:['Sans code de licence, le dessin libre (hors exercices) est limité à 10 composants ; les jonctions ne comptent pas. Les trois défis d’essai ne sont pas limités.']},
@@ -5378,6 +5379,16 @@ function elRender(){
       <div class="row" style="margin-top:6px"><label class="btn" style="cursor:pointer">Fichier CSV…<input type="file" id="elImpFile" accept=".csv,.txt,.tsv,text/csv,text/plain" hidden></label><label style="font-size:14px">Classe pour toute la liste <select id="elImpCl">${opt(ELIMP ? ELIMP.cl : '', '(celle de chaque ligne)')}</select></label><button class="btn" id="elImpPrev">Vérifier la liste</button></div>
       ${ELIMP && ELIMP.rows ? `<p style="margin:8px 0 4px"><b>${ELIMP.rows.length}</b> adresse${ELIMP.rows.length > 1 ? 's' : ''} trouvée${ELIMP.rows.length > 1 ? 's' : ''}${ELIMP.rows.length ? ` : ${esc(ELIMP.rows.slice(0, 4).map(r => r.nom || r.adresse).join(', '))}${ELIMP.rows.length > 4 ? '…' : ''}` : ''}.</p>${ELIMP.rows.length ? '<button class="btn primary" id="elImpGo">Autoriser ces élèves</button>' : ''}` : ''}</section>`;
   }
+  if(adm){
+    const cd = D.classesDet || cls.map(c => ({classe:c, prof:''})), pr = D.profs || [];
+    const popt = sel => `<option value="">—</option>` + pr.map(p => `<option value="${esc(p.adresse)}"${p.adresse === sel ? ' selected' : ''}>${esc(p.nom || p.adresse)}</option>`).join('');
+    const nb = c => [...stu.values()].filter(s => s.classe === c && !s.prof).length;
+    h += `<section><details${ELF.clOpen ? ' open' : ''} id="elClD"><summary><h3 style="display:inline">Classes (${cd.length})</h3></summary>
+      <p class="mut" style="margin:6px 0">Les élèves choisissent leur classe dans cette liste à leur première connexion. Le professeur d’une classe la retrouve dans « Mes classes ».</p>
+      <div class="scroll"><table><tr><th>Classe</th><th>Professeur</th><th class="hide-s">Élèves</th><th></th></tr>${cd.map(c => `<tr data-c="${esc(c.classe)}"><td><input class="elCn" value="${esc(c.classe)}" style="width:100%;min-width:8em"></td><td><select class="elCp">${popt(c.prof)}</select></td><td class="hide-s">${nb(c.classe)}</td>
+        <td><div class="row"><button class="btn" data-cs="1">Enregistrer</button><button class="btn ghost" data-cdel="1">Supprimer</button></div></td></tr>`).join('')}</table></div>
+      <form class="row" id="elClAdd" style="margin-top:8px"><input id="elClN" placeholder="Nouvelle classe (ex. 5Q Élec)" style="flex:1;min-width:10em"><select id="elClP">${popt(D.moi)}</select><button class="btn primary" type="submit">Ajouter la classe</button></form></details></section>`;
+  }
   h += `<section><h3>${adm ? 'Comptes' : 'Élèves'} (${list.length})</h3><div class="row" style="margin:6px 0"><select id="elFcl"><option value="">${adm ? 'Tous les comptes' : 'Toutes les classes'}</option>${adm ? `<option value="profs"${ELF.cl === 'profs' ? ' selected' : ''}>Professeurs</option>` : ''}${mine.size ? `<option value="mes"${ELF.cl === 'mes' ? ' selected' : ''}>Mes classes</option>` : ''}${cls.map(c => `<option${c === ELF.cl ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select><input id="elQ" placeholder="Rechercher" value="${esc(ELF.q)}" style="flex:1;min-width:10em"></div>`;
   h += list.length ? `<div class="scroll"><table><tr><th>Compte</th><th>Classe</th>${adm ? '<th title="Coché : le compte est professeur et voit les solutions">Solutions</th>' : ''}<th>Réussis</th><th class="hide-s">Essais</th><th class="hide-s">Pannes</th><th class="hide-s">Dernière activité</th></tr>` + list.map(s => {
       const ex = s.res.filter(r => r.type !== 'panne'), pn = s.res.filter(r => r.type === 'panne');
@@ -5423,6 +5434,13 @@ function elRender(){
     await elLoad('profAutoriser', {adresse: a, nom: $('#elNom').value.trim(), classe: $('#elAddCl').value});
     if(sol && a[0] !== '@') elLoad('adminSolutions', {adresse: a, on: true});
   };
+  $('#elClD').ontoggle = e => { ELF.clOpen = e.target.open; };
+  $('#elClAdd').onsubmit = e => { e.preventDefault(); const n = $('#elClN').value.trim(); if(!n) return; ELF.clOpen = true; elLoad('adminClasse', {classe: n, prof: $('#elClP').value}); };
+  B.querySelectorAll('[data-cs]').forEach(b => b.onclick = () => { const tr = b.closest('tr[data-c]'); ELF.clOpen = true; elLoad('adminClasse', {ancien: tr.dataset.c, classe: tr.querySelector('.elCn').value.trim(), prof: tr.querySelector('.elCp').value}); });
+  B.querySelectorAll('[data-cdel]').forEach(b => b.onclick = () => {
+    if(b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Confirmer ?'; b.classList.add('primary'); setTimeout(() => { if(b.isConnected){ b.dataset.armed = ''; b.textContent = 'Supprimer'; b.classList.remove('primary'); } }, 3000); return; }
+    ELF.clOpen = true; elLoad('adminClasseRetirer', {classe: b.closest('tr[data-c]').dataset.c});
+  });
   const prev = () => { ELIMP = {txt: $('#elImpTxt').value, cl: $('#elImpCl').value}; ELIMP.rows = elParse(ELIMP.txt, cls); elRender(); };
   $('#elImpPrev').onclick = prev;
   $('#elImpFile').onchange = e => { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { $('#elImpTxt').value = String(r.result || ''); prev(); }; r.readAsText(f); };
