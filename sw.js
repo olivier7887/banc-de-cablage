@@ -1,9 +1,11 @@
-// Banc de câblage – service worker (version 9.21.1)
-const CACHE = 'banc-cablage-9.21.1';
+// Banc de câblage – service worker (version 9.21.2)
+const CACHE = 'banc-cablage-9.21.2';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)));
 });
+// « Mettre à jour » : la nouvelle version prend la main tout de suite
+self.addEventListener('message', e => { if(e.data === 'activer') self.skipWaiting(); });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('banc-cablage-') && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });

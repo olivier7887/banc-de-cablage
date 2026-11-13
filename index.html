@@ -684,7 +684,7 @@ textarea#codeTxt{width:100%;box-sizing:border-box;min-height:180px;font-family:v
     <ul class="hlist" id="histList"></ul>
   </div>
   <div class="hfoot">
-    <div class="row1"><span class="ver">Version <span id="appVer"></span> · <button class="btn ghost" id="btnLic" style="padding:3px 8px;font-size:13px">🔑 Licence</button></span><button class="btn" id="suggBtn" aria-expanded="false">✉ Proposer une amélioration</button></div>
+    <div class="row1"><span class="ver">Version <span id="appVer"></span> · <button class="btn ghost" id="btnLic" style="padding:3px 8px;font-size:13px">🔑 Licence</button> · <button class="btn ghost" id="btnRepair" style="padding:3px 8px;font-size:13px" title="Efface le travail en cours et la copie hors connexion, garde le compte, la licence et la filière, puis recharge l’app">🔧 Réparer l’app</button></span><button class="btn" id="suggBtn" aria-expanded="false">✉ Proposer une amélioration</button></div>
     <form class="sugg" id="suggForm" hidden>
       <div class="f2"><input id="suggNom" placeholder="Ton nom (facultatif)" autocomplete="name"><select id="suggType"><option>Amélioration</option><option>Nouveau défi</option><option>Problème / bug</option><option>Autre</option></select></div>
       <textarea id="suggTxt" placeholder="Décris ta demande : ce que tu voudrais, dans quel défi ou quel composant…"></textarea>
@@ -753,6 +753,34 @@ textarea#codeTxt{width:100%;box-sizing:border-box;min-height:180px;font-family:v
 <script>
 (()=>{
 'use strict';
+
+/* filet de sécurité : une erreur ne laisse plus l'app muette, et « Réparer » remplace la réinstallation */
+async function repairApp(){
+  try{ sessionStorage.clear(); }catch(e){}
+  try{ const keep = /^banc-cablage-(compte|licence|filiere|appareil|envois:)/; Object.keys(localStorage).forEach(k => { if(/^banc-cablage-/.test(k) && !keep.test(k)) localStorage.removeItem(k); }); }catch(e){}
+  try{ if(navigator.serviceWorker){ const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(r => r.unregister())); } }catch(e){}
+  try{ if(window.caches){ const ks = await caches.keys(); await Promise.all(ks.filter(k => /^banc-cablage-/.test(k)).map(k => caches.delete(k))); } }catch(e){}
+  location.replace(location.pathname);
+}
+(() => {
+  let last = 0;
+  const show = msg => {
+    if(Date.now() - last < 4000) return; last = Date.now();
+    let bar = document.getElementById('errBar');
+    if(!bar){
+      bar = document.createElement('div'); bar.id = 'errBar'; bar.setAttribute('role', 'alert');
+      bar.style.cssText = 'position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:200;width:min(560px,calc(100% - 24px));box-sizing:border-box;background:#fff4f0;color:#5a1d0c;border:1px solid #d9541e;border-radius:10px;padding:10px 12px;font:14px/1.4 system-ui,sans-serif;box-shadow:0 6px 24px rgba(0,0,0,.25);display:grid;gap:8px';
+      document.body.appendChild(bar);
+    }
+    const v = (document.getElementById('appVer') || {}).textContent || '';
+    bar.innerHTML = '<b>Un problème est survenu dans l’app.</b><span style="font-size:12.5px;opacity:.85;word-break:break-word"></span><span style="font-size:13px">Si des boutons ne réagissent plus, touche « Réparer l’app » : ton compte, ta licence et ta filière sont gardés.</span><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" data-r style="background:#d9541e;color:#fff;border:0;border-radius:8px;padding:7px 12px;font-weight:600;cursor:pointer">Réparer l’app</button><button type="button" data-x style="background:transparent;border:1px solid #d9541e;color:#5a1d0c;border-radius:8px;padding:7px 12px;cursor:pointer">Fermer</button></div>';
+    bar.children[1].textContent = msg + (v ? ' · version ' + v : '');
+    bar.querySelector('[data-r]').onclick = repairApp;
+    bar.querySelector('[data-x]').onclick = () => bar.remove();
+  };
+  window.addEventListener('error', e => { if(!e.message) return; show(String(e.message) + (e.lineno ? ' (ligne ' + e.lineno + ')' : '')); });
+  window.addEventListener('unhandledrejection', e => { const r = e.reason, m = String(r && r.message || r || ''); if(!m || /abort|failed to fetch|network|load failed/i.test(m)) return; show(m); });
+})();
 let EDITION = 'prof';
 const G = 20;
 const hashStr = str => { let h = 0x811c9dc5; for(let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16); };
@@ -4565,7 +4593,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.21.1';
+const APP_VERSION = '9.21.2';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4606,6 +4634,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.21.2', d:'13 novembre 2026', t:'Réparer l’app', l:['Si un problème survient, un message l’indique au lieu de laisser des boutons sans réaction, avec un bouton « Réparer l’app ».', '« Réparer l’app » (aussi dans l’aide, à côté de la version) efface le travail en cours et la copie hors connexion, garde le compte, la licence et la filière, puis recharge : plus besoin de désinstaller.', 'Le bouton « Mettre à jour » installe réellement la nouvelle version.']},
   {v:'9.21.1', d:'12 novembre 2026', t:'Classes', l:['Gestion des comptes : ajouter, renommer ou supprimer une classe et choisir son professeur. Quand une classe change de nom, ses élèves suivent.', 'L’élève choisit sa classe dans la liste ou en tape une nouvelle (Mon compte) ; elle s’ajoute à la liste des classes, et l’administrateur la corrige si besoin.']},
   {v:'9.21', d:'12 novembre 2026', t:'Administrateur, professeurs, élèves', l:['Trois rôles : l’administrateur gère les comptes, les professeurs voient les solutions et les résultats de leurs classes, les élèves font les défis.', 'Les comptes professeurs ouvrent le mode prof et les solutions automatiquement, sans code de licence.', 'Page « Gestion des comptes » : importer une liste d’élèves (copier-coller ou fichier CSV), autoriser ou refuser les demandes, cocher « solutions » pour un professeur, ajouter une adresse ou un domaine.', 'Les codes de licence restent acceptés jusqu’au 31 janvier 2027 ; ensuite, l’accès se fait uniquement avec un compte autorisé. Un message prévient les appareils qui utilisent encore un code.']},
   {v:'9.20', d:'9 novembre 2026', t:'Comptes élèves et suivi par le professeur', l:['Bouton « Se connecter » : avec le compte Google de l’école (…@elmarche.be) ou avec un code reçu par e-mail, pour n’importe quelle adresse.', 'Le professeur autorise chaque élève (ou tout un domaine). Un compte autorisé débloque tous les défis, sans code de licence ; le nom de l’élève vient de son compte.', 'Chaque essai (défis, fiches, 3Q, simulateur, pupitres) et chaque panne trouvée, avec sa note sur 20, est envoyé au professeur. Sans internet, les essais attendent sur l’appareil.', 'Page « Mes élèves » pour les professeurs : demandes d’accès à accepter ou refuser, classes, exercices réussis, nombre d’essais, notes de recherche de pannes. Tout est aussi dans le Google Sheet.', 'Les codes de licence restent valables, par exemple pour les autres écoles.']},
@@ -5129,6 +5158,7 @@ async function licApply(code, quiet, tryProf){
 $('#licForm').addEventListener('submit', e => { e.preventDefault(); licApply($('#licIn').value, false, true); });
 $('#licDel').onclick = () => { if(licTracked(LICS)) licSrv({a:'rel', code:LICS.code, dev:devId()}); lsSet(LCHK, null); LICS = null; try{ localStorage.removeItem(LICKEY); }catch(e){} $('#licState').textContent = licText(); $('#licDel').hidden = true; $('#licIn').value = ''; renderExList(); renderConsigne(); };
 $('#btnLic').onclick = openLic;
+$('#btnRepair').onclick = () => { $('#mHelp').hidden = true; repairApp(); };
 (async () => {
   const hm = /[#&]licence=([^&]+)/.exec(location.hash);
   let stored = null; try{ stored = localStorage.getItem(LICKEY); }catch(e){}
@@ -5859,6 +5889,8 @@ requestAnimationFrame(() => { render(); fit(); });
   // Hors connexion : enregistre le service worker
   if('serviceWorker' in navigator && location.protocol !== 'file:'){
     navigator.serviceWorker.register('sw.js').then(reg => {
+      // une version déjà téléchargée qui attendait : elle prend la main (la page affichée est déjà la nouvelle)
+      if(reg.waiting && navigator.serviceWorker.controller){ try{ reg.waiting.postMessage('activer'); }catch(e){} }
       reg.addEventListener('updatefound', () => {
         const nw = reg.installing; if(!nw) return;
         nw.addEventListener('statechange', () => {
@@ -5866,7 +5898,7 @@ requestAnimationFrame(() => { render(); fit(); });
             const bar = document.createElement('div');
             bar.className = 'card'; bar.style.cssText = 'position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;padding:9px 10px 9px 14px;display:flex;gap:10px;align-items:center;max-width:calc(100% - 32px)';
             bar.innerHTML = '<span>Une nouvelle version est disponible.</span><button class="btn primary">Mettre à jour</button>';
-            bar.querySelector('button').onclick = () => location.reload();
+            bar.querySelector('button').onclick = () => { navigator.serviceWorker.addEventListener('controllerchange', () => location.reload()); try{ nw.postMessage('activer'); }catch(e){} setTimeout(() => location.reload(), 1500); };
             document.body.appendChild(bar);
           }
         });
