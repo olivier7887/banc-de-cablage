@@ -4593,7 +4593,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.21.2';
+const APP_VERSION = '9.21.3';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4634,6 +4634,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.21.3', d:'16 novembre 2026', t:'Correction', l:['Correction d’une erreur au démarrage quand un compte était connecté et une catégorie de défis ouverte : beaucoup de boutons ne réagissaient plus.','Compte professeur : plus de code « Mode prof ». Le bouton bascule entre « Vue élève » (solutions cachées) et « Vue prof » (solutions visibles).']},
   {v:'9.21.2', d:'13 novembre 2026', t:'Réparer l’app', l:['Si un problème survient, un message l’indique au lieu de laisser des boutons sans réaction, avec un bouton « Réparer l’app ».', '« Réparer l’app » (aussi dans l’aide, à côté de la version) efface le travail en cours et la copie hors connexion, garde le compte, la licence et la filière, puis recharge : plus besoin de désinstaller.', 'Le bouton « Mettre à jour » installe réellement la nouvelle version.']},
   {v:'9.21.1', d:'12 novembre 2026', t:'Classes', l:['Gestion des comptes : ajouter, renommer ou supprimer une classe et choisir son professeur. Quand une classe change de nom, ses élèves suivent.', 'L’élève choisit sa classe dans la liste ou en tape une nouvelle (Mon compte) ; elle s’ajoute à la liste des classes, et l’administrateur la corrige si besoin.']},
   {v:'9.21', d:'12 novembre 2026', t:'Administrateur, professeurs, élèves', l:['Trois rôles : l’administrateur gère les comptes, les professeurs voient les solutions et les résultats de leurs classes, les élèves font les défis.', 'Les comptes professeurs ouvrent le mode prof et les solutions automatiquement, sans code de licence.', 'Page « Gestion des comptes » : importer une liste d’élèves (copier-coller ou fichier CSV), autoriser ou refuser les demandes, cocher « solutions » pour un professeur, ajouter une adresse ou un domaine.', 'Les codes de licence restent acceptés jusqu’au 31 janvier 2027 ; ensuite, l’accès se fait uniquement avec un compte autorisé. Un message prévient les appareils qui utilisent encore un code.']},
@@ -5006,7 +5007,10 @@ function applyEdition(){
   document.querySelector('#mEx .sheet > p').textContent = prof
     ? 'Un exemple charge le schéma complet. Un défi pose les composants sans les fils : l’élève câble, puis vérifie.'
     : 'Choisis un défi et un niveau. Câble le schéma, vérifie-le, puis teste-le en simulation.';
-  const bp = $('#btnProf'); bp.hidden = !SECRET; bp.textContent = prof ? 'Verrouiller' : 'Mode prof';
+  const bp = $('#btnProf'); bp.hidden = !SECRET;
+  // compte professeur : bascule simple entre la vue prof (solutions) et la vue élève, sans code
+  bp.textContent = ACCPROF ? (prof ? 'Vue élève' : 'Vue prof') : (prof ? 'Verrouiller' : 'Mode prof');
+  bp.title = ACCPROF ? (prof ? 'Voir l’app comme un élève, sans les solutions' : 'Revenir à la vue prof, avec les solutions') : '';
   renderExList(); renderConsigne();
 }
 $('#eleveNom').value = wsGet(NAMEKEY) || '';
@@ -5189,7 +5193,7 @@ $('#btnRepair').onclick = () => { $('#mHelp').hidden = true; repairApp(); };
 // adresses des deux déploiements du script du Google Sheet « Banc de câblage – données » (voir apps-script/Code.gs) ; vides = fonction absente
 var CPT = {loginUrl: 'https://script.google.com/a/macros/elmarche.be/s/AKfycbxK5qN4JOH_X4IIZyG9vIkv5V6oZrVRsUeSCm9PilQae4WkL6TXsoqkEzsaALe8rTFJiQ/exec', apiUrl: 'https://script.google.com/macros/s/AKfycbwcEiD-t69me_16NUq0a87jlMjNtlnpxxckAeyh6jvi5AYcXMThXoLF2vWC90Vz2lMEaw/exec'};
 var CPTKEY = 'banc-cablage-compte', OUTKEY = 'banc-cablage-envois:', SEENKEY = 'banc-cablage-vus';
-var ACC = null, ACCPROF = false, accT = null, accBusy = false, cptStep = null;
+var ACC = null, ACCPROF = false, VUEELEVE = false, accT = null, accBusy = false, cptStep = null;
 function cptOn(){ return !!(CPT && CPT.apiUrl && CPT.loginUrl); }
 function accProf(){ return !!(ACC && (ACC.role === 'prof' || ACC.role === 'admin')); }
 function accOK(){ return !!(ACC && (ACC.statut === 'ok' || accProf())); }
@@ -5220,12 +5224,12 @@ async function accRefresh(first){
   }
   accUI();
   // compte professeur : les solutions s’ouvrent avec la clé du mode prof, sans licence
-  if(accProf() && ACC.cleProf && EDITION !== 'prof'){ try{ await unlock(ACC.cleProf); ACCPROF = true; }catch(e){} }
+  if(accProf() && ACC.cleProf && EDITION !== 'prof' && !VUEELEVE){ try{ ACCPROF = true; await unlock(ACC.cleProf); }catch(e){ ACCPROF = false; applyEdition(); } }
   accFlush();
 }
 function accLogout(){
   ACC = null; accSave();
-  if(ACCPROF){ ACCPROF = false; if(EDITION === 'prof') lock(); }
+  if(ACCPROF){ ACCPROF = false; VUEELEVE = false; if(EDITION === 'prof') lock(); else applyEdition(); }
   accUI(); flash('Tu es déconnecté sur cet appareil.');
 }
 function accUI(){
@@ -5477,8 +5481,8 @@ function elRender(){
   const go = $('#elImpGo'); if(go) go.onclick = () => elLoad('adminImporter', {lignes: ELIMP.rows.map(r => Object.assign({}, r, {classe: ELIMP.cl || r.classe})), classe: ELIMP.cl});
 }
 
-/* démarrage du compte */
-(() => {
+/* démarrage du compte : après la fin du script, quand les notes de théorie et le reste sont prêts */
+setTimeout(() => {
   const hm = /[#&]cle=([\w.\-]+)/.exec(location.hash);
   if(hm){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
   ACC = accLoad();
@@ -5510,7 +5514,7 @@ function elRender(){
       : 'Le code de licence installé sur cet appareil s’arrêtera le 31 janvier 2027. Connecte-toi dès maintenant avec ton compte (adresse de l’école) : ton professeur suit tes exercices, et tu gardes l’accès après le 31 janvier.';
     $('#mFin').hidden = false;
   }, 2500);
-})();
+}, 0);
 
 /* ---------- notes de théorie (une par notion, reliées aux exercices) ---------- */
 const THEO = {
@@ -5857,8 +5861,13 @@ function lock(){
   hist = [];
   applyEdition(); applyFil();
 }
-$('#btnProf').onclick = () => {
-  if(EDITION === 'prof'){ lock(); return; }
+$('#btnProf').onclick = async () => {
+  if(EDITION === 'prof'){ if(ACCPROF) VUEELEVE = true; lock(); if(ACCPROF) flash('Vue élève : les solutions sont cachées. « Vue prof » pour les retrouver.'); return; }
+  if(ACCPROF && ACC && ACC.cleProf){
+    VUEELEVE = false;
+    try{ await unlock(ACC.cleProf); flash('Vue prof : solutions visibles.'); }catch(e){ ACCPROF = false; applyEdition(); flash('La clé prof du serveur ne correspond pas : demande le code du mode prof.'); }
+    return;
+  }
   $('#pwdMsg').textContent = ''; $('#pwdIn').value = ''; $('#mPwd').hidden = false; setTimeout(() => $('#pwdIn').focus(), 50);
 };
 $('#pwdForm').addEventListener('submit', async e => {

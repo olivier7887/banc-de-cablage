@@ -32,7 +32,7 @@ Le script `Code.gs` relie le Banc de câblage à un Google Sheet : connexion des
 
 ## Facultatif
 
-Dans **Paramètres du projet › Propriétés du script**, ajouter `CODE_PROF` = votre code de licence prof : les professeurs connectés passent alors automatiquement en mode prof.
+Dans **Paramètres du projet › Propriétés du script**, ajouter `CLE_PROF` = le code du mode prof : les professeurs connectés voient alors directement les solutions, et basculent entre « Vue élève » et « Vue prof » sans code.
 
 ## Mettre à jour le script
 
