@@ -126,7 +126,7 @@ const ACTIONS = {
   profAutoriser: (u, q) => (admin_(u), autoriser_(u, String(q.adresse || ''), String(q.classe || ''), String(q.nom || '')), profDonnees_(u)),
   profRefuser: (u, q) => (admin_(u), refuser_(u, String(q.adresse || '')), profDonnees_(u)),
   profRetirer: (u, q) => (admin_(u), retirer_(String(q.adresse || '')), profDonnees_(u)),
-  profClasse: (u, q) => (admin_(u), changerClasse_(String(q.adresse || ''), String(q.classe || '')), profDonnees_(u)),
+  profClasse: (u, q) => (prof_(u), changerClasse_(u, String(q.adresse || ''), String(q.classe || '')), profDonnees_(u)),
   adminProfs: (u) => (admin_(u), listeProfsAdmin_()),
   adminProfAjouter: (u, q) => (admin_(u), profAjouter_(String(q.adresse || ''), String(q.nom || '')), listeProfsAdmin_()),
   adminProfRetirer: (u, q) => (admin_(u), profRetirer_(u, String(q.adresse || '')), listeProfsAdmin_()),
@@ -335,11 +335,23 @@ function retirer_(brut) {
     for (let i = pr.length - 1; i >= 0; i--) if (adr_(pr[i][0]) === a && !estAdminLigne_(pr[i])) ps.deleteRow(i + 2);
   });
 }
-function changerClasse_(brut, classe) {
+// classe d'un élève : par l'administrateur ou par n'importe quel professeur (élèves sans classe, erreur de classe)
+function changerClasse_(u, brut, brutClasse) {
   const a = adr_(brut);
+  if (!emailValide_(a)) throw new Error('Adresse e-mail non valide.');
+  if (profDe_(a)) throw new Error('Les professeurs n’ont pas de classe.');
+  const cl = String(brutClasse || '').trim();
+  const ex = cl ? listeClasses_().find(c => c.classe.toLowerCase() === cl.toLowerCase()) : null;
+  if (cl && !ex) throw new Error('Classe inconnue : ajoute-la d’abord dans la liste des classes.');
+  const classe = ex ? ex.classe : '';
   verrou_(() => {
     const sh = onglet_('autorises'), rows = lignes_('autorises'), i = rows.findIndex(r => adr_(r[0]) === a);
     if (i >= 0) sh.getRange(i + 2, 3).setValue(classe);
+    else if (statut_(a).statut === 'ok') sh.appendRow([a, nomDe_(a).complet, classe, u.email, new Date(), 'classe attribuée']);   // élève autorisé par son domaine
+    const ds = onglet_('demandes'), dr = lignes_('demandes'), j = dr.findIndex(r => adr_(r[0]) === a);
+    if (j >= 0) ds.getRange(j + 2, 3).setValue(classe);
+    if (i < 0 && j < 0 && statut_(a).statut !== 'ok') throw new Error('Cette adresse n’a pas encore demandé d’accès.');
+    const rs = onglet_('resultats'); lignes_('resultats').forEach((r, k) => { if (adr_(r[0]) === a) rs.getRange(k + 2, 3).setValue(classe); });
   });
 }
 

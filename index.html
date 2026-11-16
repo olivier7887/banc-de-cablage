@@ -4593,7 +4593,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.21.5';
+const APP_VERSION = '9.22';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4634,6 +4634,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.22', d:'16 novembre 2026', t:'Classes des élèves', l:['« Mes élèves » / « Gestion des comptes » : la classe de chaque élève se choisit directement dans la liste, enregistrée tout de suite.','Les professeurs peuvent aussi attribuer ou changer la classe d’un élève.','Nouveau filtre « Sans classe » pour retrouver les élèves connectés sans préciser leur classe.']},
   {v:'9.21.5', d:'16 novembre 2026', t:'Correction', l:['Compte professeur : après « Vue élève », « Vue prof » rouvre les solutions sans code, même quand un code de licence prof est aussi installé sur l’appareil.']},
   {v:'9.21.4', d:'16 novembre 2026', t:'Correction', l:['Compte professeur : la clé du mode prof réglée dans le script peut aussi être un code de licence prof. Un message prévient si elle n’ouvre pas les solutions.']},
   {v:'9.21.3', d:'16 novembre 2026', t:'Correction', l:['Correction d’une erreur au démarrage quand un compte était connecté et une catégorie de défis ouverte : beaucoup de boutons ne réagissaient plus.','Compte professeur : plus de code « Mode prof ». Le bouton bascule entre « Vue élève » (solutions cachées) et « Vue prof » (solutions visibles).']},
@@ -5379,6 +5380,7 @@ async function elLoad(act, q){
     if(!act && ELF.cl === '' && EL.mesClasses && EL.mesClasses.length && !EL.admin) ELF.cl = 'mes';
     elRender();
     if(act === 'adminImporter'){ ELIMP = null; elRender(); elMsg('Liste importée : ces élèves sont autorisés.'); }
+    if(act === 'profClasse') elMsg(q.classe ? `Classe enregistrée : ${q.classe}.` : 'Classe retirée.');
   }catch(e){ if(EL){ elRender(); elMsg(e.message, true); } else B.innerHTML = `<p class="ko">${esc(e.message)}</p>`; }
 }
 function elMsg(t, ko){ const m = $('#elMsg'); if(m){ m.textContent = t; m.className = ko ? 'ko' : 'ok'; } }
@@ -5408,7 +5410,8 @@ function elRender(){
   D.resultats.forEach(r => { if(!stu.has(r.adresse)) stu.set(r.adresse, {adresse:r.adresse, nom:r.nom, classe:r.classe, res:[], dom:true}); const s = stu.get(r.adresse); s.res.push(r); if(!s.nom) s.nom = r.nom; if(!s.classe) s.classe = r.classe; });
   stu.forEach(s => { const p = profs.get(s.adresse); s.prof = !!p; s.admin = !!(p && p.admin); });
   const mine = new Set(D.mesClasses || []);
-  let list = [...stu.values()].filter(s => ELF.cl === 'mes' ? mine.has(s.classe) : ELF.cl === 'profs' ? s.prof : ELF.cl ? s.classe === ELF.cl : true);
+  let list = [...stu.values()].filter(s => ELF.cl === 'mes' ? mine.has(s.classe) : ELF.cl === 'profs' ? s.prof : ELF.cl === 'sans' ? !s.classe && !s.prof : ELF.cl ? s.classe === ELF.cl : true);
+  const sans = [...stu.values()].filter(s => !s.classe && !s.prof).length;
   if(!adm) list = list.filter(s => !s.prof);
   const q = ELF.q.trim().toLowerCase(); if(q) list = list.filter(s => (s.nom + ' ' + s.adresse).toLowerCase().includes(q));
   list.sort((a, b) => (b.admin - a.admin) || (b.prof - a.prof) || (a.classe || '~').localeCompare(b.classe || '~') || (a.nom || a.adresse).localeCompare(b.nom || b.adresse));
@@ -5435,13 +5438,13 @@ function elRender(){
         <td><div class="row"><button class="btn" data-cs="1">Enregistrer</button><button class="btn ghost" data-cdel="1">Supprimer</button></div></td></tr>`).join('')}</table></div>
       <form class="row" id="elClAdd" style="margin-top:8px"><input id="elClN" placeholder="Nouvelle classe (ex. 5Q Élec)" style="flex:1;min-width:10em"><select id="elClP">${popt(D.moi)}</select><button class="btn primary" type="submit">Ajouter la classe</button></form></details></section>`;
   }
-  h += `<section><h3>${adm ? 'Comptes' : 'Élèves'} (${list.length})</h3><div class="row" style="margin:6px 0"><select id="elFcl"><option value="">${adm ? 'Tous les comptes' : 'Toutes les classes'}</option>${adm ? `<option value="profs"${ELF.cl === 'profs' ? ' selected' : ''}>Professeurs</option>` : ''}${mine.size ? `<option value="mes"${ELF.cl === 'mes' ? ' selected' : ''}>Mes classes</option>` : ''}${cls.map(c => `<option${c === ELF.cl ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select><input id="elQ" placeholder="Rechercher" value="${esc(ELF.q)}" style="flex:1;min-width:10em"></div>`;
+  h += `<section><h3>${adm ? 'Comptes' : 'Élèves'} (${list.length})</h3><div class="row" style="margin:6px 0"><select id="elFcl"><option value="">${adm ? 'Tous les comptes' : 'Toutes les classes'}</option>${adm ? `<option value="profs"${ELF.cl === 'profs' ? ' selected' : ''}>Professeurs</option>` : ''}${mine.size ? `<option value="mes"${ELF.cl === 'mes' ? ' selected' : ''}>Mes classes</option>` : ''}${sans || ELF.cl === 'sans' ? `<option value="sans"${ELF.cl === 'sans' ? ' selected' : ''}>Sans classe (${sans})</option>` : ''}${cls.map(c => `<option${c === ELF.cl ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select><input id="elQ" placeholder="Rechercher" value="${esc(ELF.q)}" style="flex:1;min-width:10em"></div>`;
   h += list.length ? `<div class="scroll"><table><tr><th>Compte</th><th>Classe</th>${adm ? '<th title="Coché : le compte est professeur et voit les solutions">Solutions</th>' : ''}<th>Réussis</th><th class="hide-s">Essais</th><th class="hide-s">Pannes</th><th class="hide-s">Dernière activité</th></tr>` + list.map(s => {
       const ex = s.res.filter(r => r.type !== 'panne'), pn = s.res.filter(r => r.type === 'panne');
       const ok = ex.filter(r => r.reussi).length, ess = ex.reduce((a, r) => a + r.essais, 0), last = Math.max(0, ...s.res.map(r => r.dernier));
       const notes = pn.filter(r => r.note != null).map(r => r.note), moy = notes.length ? Math.round(notes.reduce((a, b) => a + b, 0) / notes.length * 2) / 2 : null;
       const op = ELF.open === s.adresse, cols = adm ? 7 : 6;
-      let row = `<tr class="stu" data-s="${esc(s.adresse)}" data-a="${esc(s.adresse)}"><td><b>${esc(s.nom || s.adresse)}</b>${s.admin ? '<span class="tag">administrateur</span>' : s.prof ? '<span class="tag">professeur</span>' : ''}${s.dom ? '<span class="tag" title="Autorisé par son domaine">domaine</span>' : ''}<br><span class="mut">${esc(s.adresse)}</span></td><td>${esc(s.classe || '—')}</td>
+      let row = `<tr class="stu" data-s="${esc(s.adresse)}" data-a="${esc(s.adresse)}"><td><b>${esc(s.nom || s.adresse)}</b>${s.admin ? '<span class="tag">administrateur</span>' : s.prof ? '<span class="tag">professeur</span>' : ''}${s.dom ? '<span class="tag" title="Autorisé par son domaine">domaine</span>' : ''}<br><span class="mut">${esc(s.adresse)}</span></td><td>${s.prof ? '—' : `<select class="elStCl" aria-label="Classe"${s.classe ? '' : ' style="border-color:var(--warn,#c80)"'}>${opt(s.classe, 'Choisir…')}</select>`}</td>
         ${adm ? `<td><input type="checkbox" class="elSol"${s.prof ? ' checked' : ''}${s.admin || s.dom ? ' disabled' : ''} aria-label="Voit les solutions" style="width:20px;height:20px"></td>` : ''}
         <td>${ok} / ${ex.length}</td><td class="hide-s">${ess}</td><td class="hide-s">${pn.length ? pn.reduce((a, r) => a + r.essais, 0) + (moy != null ? ` · moy. ${String(moy).replace('.', ',')}/20` : '') : '—'}</td><td class="hide-s">${elDate(last) || '—'}</td></tr>`;
       if(op){
@@ -5450,7 +5453,7 @@ function elRender(){
             (r.type === 'panne' ? `${r.essais} panne${r.essais > 1 ? 's' : ''} trouvée${r.essais > 1 ? 's' : ''}${r.note != null ? `, meilleure note <b>${String(r.note).replace('.', ',')}/20</b>` : ''}`
               : r.reussi ? `<span class="ok">réussi</span> au ${nth(r.n)} essai (${elDate(r.reussiLe)})${r.essais > r.n ? `, ${r.essais} essais en tout` : ''}` : `${r.essais} essai${r.essais > 1 ? 's' : ''}, pas encore réussi`) +
             ` <span class="mut">· ${elDate(r.dernier)}</span></li>`).join('')}</ul>` : '<p class="mut">Aucun exercice enregistré pour l’instant.</p>'}
-          ${adm && !s.dom && !s.admin ? `<div class="row"><label style="font-size:14px">Classe <select class="elCl">${opt(s.classe, '—')}</select></label><button class="btn" data-cl="1">Changer</button><button class="btn ghost" data-del="1">Retirer l’accès</button></div>` : ''}</td></tr>`;
+          ${adm && !s.dom && !s.admin ? `<div class="row"><button class="btn ghost" data-del="1">Retirer l’accès</button></div>` : ''}</td></tr>`;
       }
       return row;
     }).join('') + `</table></div>` : '<p class="mut">Aucun compte' + (ELF.cl || q ? ' pour ce filtre' : ' pour l’instant') + '.</p>';
@@ -5462,13 +5465,14 @@ function elRender(){
   B.innerHTML = h;
   $('#elFcl').onchange = e => { ELF.cl = e.target.value; elRender(); };
   $('#elQ').oninput = e => { ELF.q = e.target.value; clearTimeout(elRender.t); elRender.t = setTimeout(() => { elRender(); const i = $('#elQ'); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }, 300); };
-  B.querySelectorAll('tr.stu').forEach(tr => tr.onclick = e => { if(e.target.closest('input')) return; ELF.open = ELF.open === tr.dataset.s ? '' : tr.dataset.s; elRender(); });
+  B.querySelectorAll('tr.stu').forEach(tr => tr.onclick = e => { if(e.target.closest('input, select')) return; ELF.open = ELF.open === tr.dataset.s ? '' : tr.dataset.s; elRender(); });
+  // classe d’un élève : admin et professeurs
+  B.querySelectorAll('.elStCl').forEach(c => c.onchange = () => elLoad('profClasse', {adresse: c.closest('tr').dataset.a, classe: c.value}));
   if(!adm) return;
   const row = b => b.closest('tr[data-a]'), clOf = tr => { const s = tr.querySelector('.elCl'); return s ? s.value : ''; };
   B.querySelectorAll('.elSol').forEach(c => c.onchange = () => elLoad('adminSolutions', {adresse: row(c).dataset.a, on: c.checked}));
   B.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { const tr = row(b); elLoad('profAutoriser', {adresse: tr.dataset.a, classe: clOf(tr)}); });
   B.querySelectorAll('[data-no]').forEach(b => b.onclick = () => elLoad('profRefuser', {adresse: row(b).dataset.a}));
-  B.querySelectorAll('[data-cl]').forEach(b => b.onclick = () => { const tr = b.closest('tr.det'); elLoad('profClasse', {adresse: tr.dataset.a, classe: clOf(tr)}); });
   B.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
     const a = row(b).dataset.a;
     if(b.dataset.armed !== '1'){ b.dataset.armed = '1'; b.textContent = 'Confirmer ?'; b.classList.add('primary'); setTimeout(() => { if(b.isConnected){ b.dataset.armed = ''; b.textContent = a[0] === '@' ? 'Retirer' : 'Retirer l’accès'; b.classList.remove('primary'); } }, 3000); return; }
