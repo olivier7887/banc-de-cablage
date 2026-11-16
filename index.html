@@ -4593,7 +4593,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.21.4';
+const APP_VERSION = '9.21.5';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4634,6 +4634,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.21.5', d:'16 novembre 2026', t:'Correction', l:['Compte professeur : après « Vue élève », « Vue prof » rouvre les solutions sans code, même quand un code de licence prof est aussi installé sur l’appareil.']},
   {v:'9.21.4', d:'16 novembre 2026', t:'Correction', l:['Compte professeur : la clé du mode prof réglée dans le script peut aussi être un code de licence prof. Un message prévient si elle n’ouvre pas les solutions.']},
   {v:'9.21.3', d:'16 novembre 2026', t:'Correction', l:['Correction d’une erreur au démarrage quand un compte était connecté et une catégorie de défis ouverte : beaucoup de boutons ne réagissaient plus.','Compte professeur : plus de code « Mode prof ». Le bouton bascule entre « Vue élève » (solutions cachées) et « Vue prof » (solutions visibles).']},
   {v:'9.21.2', d:'13 novembre 2026', t:'Réparer l’app', l:['Si un problème survient, un message l’indique au lieu de laisser des boutons sans réaction, avec un bouton « Réparer l’app ».', '« Réparer l’app » (aussi dans l’aide, à côté de la version) efface le travail en cours et la copie hors connexion, garde le compte, la licence et la filière, puis recharge : plus besoin de désinstaller.', 'Le bouton « Mettre à jour » installe réellement la nouvelle version.']},
@@ -5225,7 +5226,12 @@ async function accRefresh(first){
   }
   accUI();
   // compte professeur : les solutions s’ouvrent avec la clé du mode prof, sans licence
-  if(accProf() && ACC.cleProf && EDITION !== 'prof' && !VUEELEVE){ try{ ACCPROF = true; await profOpen(ACC.cleProf); }catch(e){ ACCPROF = false; applyEdition(); flash('La clé du mode prof réglée dans le script (CLE_PROF) n’ouvre pas les solutions : vérifie sa valeur.'); } }
+  // compte prof : la bascule Vue élève / Vue prof vaut aussi quand le mode prof était déjà ouvert par un code de licence
+  if(accProf() && ACC.cleProf){
+    ACCPROF = true;
+    if(EDITION !== 'prof' && !VUEELEVE){ try{ await profOpen(ACC.cleProf); }catch(e){ ACCPROF = false; flash('La clé du mode prof réglée dans le script (CLE_PROF) n’ouvre pas les solutions : vérifie sa valeur.'); } }
+    applyEdition();
+  }
   accFlush();
 }
 // la clé prof du script peut être le mot de passe du mode prof, un code de licence prof ou un code M- : on en tire la clé
