@@ -122,6 +122,12 @@ const PUBLIQUES = {
 };
 /* Connexion depuis la Plateforme technique : ticket de 2 minutes vérifié par la plateforme,
    puis même clé et mêmes règles que la connexion Google (l'accès d'un élève reste à autoriser). */
+/* À exécuter une fois depuis l'éditeur si Google n'a pas encore autorisé « Se connecter à un service externe » :
+   l'appel ci-dessous déclenche la demande d'autorisation, puis vérifie que la plateforme répond. */
+function autoriserPlateforme() {
+  const r = UrlFetchApp.fetch(PLATEFORME_API, { muteHttpExceptions: true, followRedirects: true });
+  Logger.log('Plateforme : ' + r.getResponseCode() + ' ' + r.getContentText().slice(0, 120));
+}
 function sso_(ticket) {
   if (!ticket) throw erreurAuth_('Ticket de connexion manquant.');
   const r = UrlFetchApp.fetch(PLATEFORME_API, { method: 'post', contentType: 'text/plain', payload: JSON.stringify({ a: 'ssoCheck', p: { ticket, app: 'banc' } }), muteHttpExceptions: true, followRedirects: true });
