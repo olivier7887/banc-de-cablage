@@ -4595,7 +4595,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.23';
+const APP_VERSION = '9.24';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4636,6 +4636,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.24', d:'19 novembre 2026', t:'Gestion des comptes plus claire', l:['Pendant un enregistrement (retirer un accès, autoriser, changer une classe…), la liste indique « Enregistrement en cours… » et ne réagit plus aux clics, puis confirme ce qui a été fait.']},
   {v:'9.23', d:'19 novembre 2026', t:'Ouverture depuis la Plateforme technique', l:['Ouvert depuis la plateforme de l’école, le Banc se connecte tout seul avec le compte de la plateforme : plus besoin de passer par la page Google.','L’accès d’un élève reste à autoriser par son professeur, comme avant.','Un bouton « ← Plateforme » permet d’y revenir.']},
   {v:'9.22', d:'16 novembre 2026', t:'Classes des élèves', l:['« Mes élèves » / « Gestion des comptes » : la classe de chaque élève se choisit directement dans la liste, enregistrée tout de suite.','Les professeurs peuvent aussi attribuer ou changer la classe d’un élève.','Nouveau filtre « Sans classe » pour retrouver les élèves connectés sans préciser leur classe.']},
   {v:'9.21.5', d:'16 novembre 2026', t:'Correction', l:['Compte professeur : après « Vue élève », « Vue prof » rouvre les solutions sans code, même quand un code de licence prof est aussi installé sur l’appareil.']},
@@ -5378,13 +5379,17 @@ function openEl(){ $('#elTitle').textContent = ACC && ACC.role === 'admin' ? 'Ge
 async function elLoad(act, q){
   const B = $('#elBody');
   if(!EL) B.innerHTML = '<p class="mut">Chargement…</p>';
+  // le serveur met quelques secondes : on le montre, et on bloque les doubles clics pendant ce temps
+  if(act){ elMsg('⏳ Enregistrement en cours…'); B.style.pointerEvents = 'none'; B.style.opacity = '.6'; }
   try{
     EL = await accApi(act || 'profDonnees', q);
     if(!act && ELF.cl === '' && EL.mesClasses && EL.mesClasses.length && !EL.admin) ELF.cl = 'mes';
     elRender();
     if(act === 'adminImporter'){ ELIMP = null; elRender(); elMsg('Liste importée : ces élèves sont autorisés.'); }
-    if(act === 'profClasse') elMsg(q.classe ? `Classe enregistrée : ${q.classe}.` : 'Classe retirée.');
+    else if(act === 'profClasse') elMsg(q.classe ? `Classe enregistrée : ${q.classe}.` : 'Classe retirée.');
+    else if(act){ const M = {profRetirer:'Accès retiré : ' + (q.adresse || '') + '.', profAutoriser:'Accès autorisé : ' + (q.adresse || '') + '.', profRefuser:'Demande refusée.', adminSolutions:'Réglage des solutions enregistré.', adminClasse:'Classe enregistrée.', adminClasseRetirer:'Classe retirée.'}; elMsg(M[act] || '✓ Enregistré.'); }
   }catch(e){ if(EL){ elRender(); elMsg(e.message, true); } else B.innerHTML = `<p class="ko">${esc(e.message)}</p>`; }
+  finally{ B.style.pointerEvents = ''; B.style.opacity = ''; }
 }
 function elMsg(t, ko){ const m = $('#elMsg'); if(m){ m.textContent = t; m.className = ko ? 'ko' : 'ok'; } }
 const elDate = ms => ms ? new Date(ms).toLocaleDateString('fr-BE', {day:'2-digit', month:'2-digit'}) + ' ' + new Date(ms).toLocaleTimeString('fr-BE', {hour:'2-digit', minute:'2-digit'}) : '';
