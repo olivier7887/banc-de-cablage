@@ -193,11 +193,16 @@ function emailValide_(e) { return /^[^\s@<>()",;:]+@[a-z0-9.-]+\.[a-z]{2,}$/.tes
 function nomDe_(email) {
   const a = lignes_('autorises').find(r => adr_(r[0]) === email);
   if (a && String(a[1]).trim()) { const p = String(a[1]).trim().split(/\s+/); return { nom: p[0], prenom: p.slice(1).join(' '), complet: String(a[1]).trim() }; }
-  const parts = email.split('@')[0].split(/[._]/).filter(Boolean);
+  return nomAdresse_(email);
+}
+/* « Nom Prénom » déduit de l'adresse (prenom.nom.student@… → « Nom Prénom »), sans lire le Google Sheet */
+function nomAdresse_(email) {
+  const parts = String(email || '').split('@')[0].split(/[._]/).filter(Boolean);
   if (parts.length > 1 && /^students?\d*$/.test(parts[parts.length - 1])) parts.pop();
   const prenom = cap_(parts[0] || ''), nom = parts.slice(1).map(cap_).join(' ');
   return { prenom, nom, complet: (nom ? nom + ' ' : '') + prenom };
 }
+const nomOu_ = (nom, adresse) => String(nom || '').trim() || (String(adresse || '')[0] === '@' ? '' : nomAdresse_(adresse).complet);
 function profDe_(email) { return lignes_('profs').find(r => adr_(r[0]) === email); }
 function prof_(u) { if (u.role !== 'prof' && u.role !== 'admin') throw new Error('Réservé aux professeurs.'); }
 function admin_(u) { if (u.role !== 'admin') throw new Error('Réservé à l’administrateur (onglet Profs, remarque « Propriétaire »).'); }
@@ -316,7 +321,7 @@ function envoyer_(u, evs) {
 function profDonnees_(u) {
   const classes = listeClasses_();
   const mesClasses = classes.filter(c => c.prof === u.email).map(c => c.classe);
-  const aut = lignes_('autorises').filter(r => String(r[0]).trim()).map(r => ({ adresse: adr_(r[0]), nom: String(r[1] || ''), classe: String(r[2] || ''), par: adr_(r[3]), le: dateMs_(r[4]) }));
+  const aut = lignes_('autorises').filter(r => String(r[0]).trim()).map(r => ({ adresse: adr_(r[0]), nom: nomOu_(r[1], adr_(r[0])), classe: String(r[2] || ''), par: adr_(r[3]), le: dateMs_(r[4]) }));
   const dem = lignes_('demandes').filter(r => String(r[0]).trim() && !/accept/i.test(String(r[5])))
     .map(r => ({ adresse: adr_(r[0]), nom: String(r[1] || ''), classe: String(r[2] || ''), le: dateMs_(r[3]), verifiee: r[4] === true, statut: String(r[5] || '') }));
   const res = lignes_('resultats').filter(r => String(r[0]).trim()).map(r => ({ adresse: adr_(r[0]), nom: String(r[1] || ''), classe: String(r[2] || ''), k: String(r[3]), titre: String(r[4]), lvl: String(r[5]), type: String(r[6]),
@@ -333,7 +338,7 @@ function autoriser_(u, brut, classe, nom) {
   verrou_(() => {
     const sh = onglet_('autorises'), rows = lignes_('autorises'), i = rows.findIndex(r => adr_(r[0]) === a);
     const dm = lignes_('demandes').find(r => adr_(r[0]) === a);
-    const nm = nom || (i >= 0 ? String(rows[i][1]) : '') || (dm && !/@/.test(String(dm[1])) ? String(dm[1]) : '');
+    const nm = nom || (i >= 0 ? String(rows[i][1]) : '') || (dm && !/@/.test(String(dm[1])) ? String(dm[1]) : '') || nomOu_('', a);
     const cl = classe || (i >= 0 ? String(rows[i][2]) : '') || (dm ? String(dm[2] || '') : '');
     if (i < 0) sh.appendRow([a, nm, cl, u.email, new Date(), '']);
     else sh.getRange(i + 2, 2, 1, 2).setValues([[nm, cl]]);
@@ -379,7 +384,7 @@ function changerClasse_(u, brut, brutClasse) {
    Administrateur : professeurs
    ========================================================= */
 function listeProfsAdmin_() {
-  return lignes_('profs').filter(r => String(r[0]).trim()).map(r => ({ adresse: adr_(r[0]), nom: String(r[1] || ''), admin: estAdminLigne_(r) }));
+  return lignes_('profs').filter(r => String(r[0]).trim()).map(r => ({ adresse: adr_(r[0]), nom: nomOu_(r[1], adr_(r[0])), admin: estAdminLigne_(r) }));
 }
 function profAjouter_(brut, nom) {
   const a = adr_(brut);
