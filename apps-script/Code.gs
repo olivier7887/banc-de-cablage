@@ -25,6 +25,8 @@ const DOMAINE = 'elmarche.be';
 const APP_URL = 'https://olivier7887.github.io/banc-de-cablage/';
 const DUREE_CLE_JOURS = 180;
 const CODE_MINUTES = 15;
+// Plateforme technique (isr-maintenance) : elle ouvre l'app avec un ticket de connexion qu'on fait vérifier ici
+const PLATEFORME_API = 'https://script.google.com/macros/s/AKfycbxPDMqJni1QwgLjrAV3RBmTDXeAX1MWN47cAis_I3V0VckDQEx4eq8oDxK-upmSAWX1Pw/exec';
 
 const ONGLETS = {
   profs: { nom: 'Profs', entetes: ['Adresse', 'Nom', 'Remarque'] },
@@ -116,7 +118,19 @@ function doPost(e) {
 const PUBLIQUES = {
   codeDemander: (q) => codeDemander_(String(q.email || '')),
   codeVerifier: (q) => codeVerifier_(String(q.email || ''), String(q.code || '')),
+  sso: (q) => sso_(String(q.ticket || '')),
 };
+/* Connexion depuis la Plateforme technique : ticket de 2 minutes vérifié par la plateforme,
+   puis même clé et mêmes règles que la connexion Google (l'accès d'un élève reste à autoriser). */
+function sso_(ticket) {
+  if (!ticket) throw erreurAuth_('Ticket de connexion manquant.');
+  const r = UrlFetchApp.fetch(PLATEFORME_API, { method: 'post', contentType: 'text/plain', payload: JSON.stringify({ a: 'ssoCheck', p: { ticket, app: 'banc' } }), muteHttpExceptions: true, followRedirects: true });
+  let j; try { j = JSON.parse(r.getContentText()); } catch (e) { throw new Error('La plateforme ne répond pas : réessaie.'); }
+  if (!j.ok) throw erreurAuth_(j.msg || 'Connexion par la plateforme refusée.');
+  const email = adr_(j.mail);
+  if (statut_(email).statut !== 'ok') noterDemande_(email, '', true);
+  return { cle: signer_({ e: email, x: Date.now() + DUREE_CLE_JOURS * 864e5 }) };
+}
 // avec clé
 const ACTIONS = {
   moi: (u, q) => { if (u.statut === 'attente' && !lignes_('demandes').some(r => adr_(r[0]) === u.email)) noterDemande_(u.email, '', true); return moi_(u, q); },

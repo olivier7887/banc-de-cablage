@@ -2,6 +2,8 @@
 <!-- Banc de câblage · © 2026 Olivier Lesenfants · Tous droits réservés. Logiciel propriétaire, non open source. Toute copie, modification ou diffusion est interdite sans autorisation écrite de l’auteur. -->
 <html lang="fr">
 <head>
+<script>/* ouvert depuis la Plateforme technique : noté avant que l'app ne nettoie l'adresse (bouton « ← Plateforme ») */
+try{ if(/(^|[#&])plateforme(&|$)/.test(location.hash)) sessionStorage.setItem('depuisPlateforme','1'); }catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#d9520c">
@@ -4593,7 +4595,7 @@ exBody.addEventListener('click', e => {
 
 /* ---------- persistence & sharing ---------- */
 const STORE = 'banc-cablage-v1';
-const APP_VERSION = '9.22';
+const APP_VERSION = '9.23';
 function save(){ wsSet(STORE, JSON.stringify({S, consigne, v: APP_VERSION})); }
 function restore(){ try{ const d = JSON.parse(wsGet(STORE) || 'null'); if(d && d.S && Array.isArray(d.S.comps) && d.S.comps.length){ S = d.S; consigne = d.consigne || null;
       if(consigne && consigne.kind === 'ex' && EDITION !== 'prof'){ S = {comps:[], wires:[], next:d.S.next || 1}; consigne = null; return false; }
@@ -4634,6 +4636,7 @@ $('#btnClear').onclick = () => {
 $('#btnEx').onclick = () => { renderExList(); $('#mEx').hidden = false; };
 $('#btnHelp').onclick = () => { $('#mHelp').hidden = false; };
 const HIST = [
+  {v:'9.23', d:'19 novembre 2026', t:'Ouverture depuis la Plateforme technique', l:['Ouvert depuis la plateforme de l’école, le Banc se connecte tout seul avec le compte de la plateforme : plus besoin de passer par la page Google.','L’accès d’un élève reste à autoriser par son professeur, comme avant.','Un bouton « ← Plateforme » permet d’y revenir.']},
   {v:'9.22', d:'16 novembre 2026', t:'Classes des élèves', l:['« Mes élèves » / « Gestion des comptes » : la classe de chaque élève se choisit directement dans la liste, enregistrée tout de suite.','Les professeurs peuvent aussi attribuer ou changer la classe d’un élève.','Nouveau filtre « Sans classe » pour retrouver les élèves connectés sans préciser leur classe.']},
   {v:'9.21.5', d:'16 novembre 2026', t:'Correction', l:['Compte professeur : après « Vue élève », « Vue prof » rouvre les solutions sans code, même quand un code de licence prof est aussi installé sur l’appareil.']},
   {v:'9.21.4', d:'16 novembre 2026', t:'Correction', l:['Compte professeur : la clé du mode prof réglée dans le script peut aussi être un code de licence prof. Un message prévient si elle n’ouvre pas les solutions.']},
@@ -5499,10 +5502,14 @@ function elRender(){
 
 /* démarrage du compte : après la fin du script, quand les notes de théorie et le reste sont prêts */
 setTimeout(() => {
-  const hm = /[#&]cle=([\w.\-]+)/.exec(location.hash);
-  if(hm){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
+  const hm = /[#&]cle=([\w.\-]+)/.exec(location.hash), hp = /[#&]pt=([\w.\-]+)/.exec(location.hash);
+  if(hm || hp){ try{ history.replaceState(null, '', location.pathname + location.search); }catch(e){} }
   ACC = accLoad();
-  if(hm && cptOn()){
+  if(hp && cptOn()){
+    // ouvert depuis la Plateforme technique : son ticket remplace la connexion Google
+    accApi('sso', {ticket: hp[1]}).then(r => { ACC = {cle: r.cle, statut:'attente', role:'eleve', complet:'', prenom:'', email:''}; accSave(); return accRefresh(true); })
+      .then(() => { accUI(); accWelcome(); }).catch(e => flash('Connexion par la plateforme impossible : ' + e.message));
+  } else if(hm && cptOn()){
     ACC = {cle: hm[1], statut:'attente', role:'eleve', complet:'', prenom:'', email:''}; accSave();
     accRefresh(true).then(() => { accWelcome(); }).catch(e => flash(e.message));
   } else if(ACC && cptOn()) accRefresh(false);
@@ -5950,6 +5957,18 @@ requestAnimationFrame(() => { render(); fit(); });
     const about = [...help.querySelectorAll('h3')].find(h => h.textContent.trim() === 'À propos');
     if(about && about.parentNode) about.parentNode.insertBefore(sec, about); else help.appendChild(sec);
   }
+})();
+</script>
+<script>
+/* ouverture depuis la Plateforme technique : bouton « ← Plateforme » pour y revenir */
+(function(){
+  var U = 'https://isr-maintenance.github.io/plateforme/';
+  try { if (/(^|[#&])plateforme(&|$)/.test(location.hash)) sessionStorage.setItem('depuisPlateforme', '1'); if (sessionStorage.getItem('depuisPlateforme') !== '1') return; } catch (e) { return; }
+  var b = document.createElement('a');
+  b.href = U; b.textContent = '← Plateforme'; b.title = 'Revenir à la plateforme technique';
+  b.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:9999;background:#1d1d1f;color:#fff;font:600 14px/1 system-ui,sans-serif;padding:10px 14px;border-radius:999px;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25)';
+  b.onclick = function(e){ if (window.opener && !window.opener.closed) { e.preventDefault(); try { window.opener.focus(); } catch (x) {} window.close(); setTimeout(function(){ location.href = U; }, 300); } };
+  document.body.appendChild(b);
 })();
 </script>
 </body>
